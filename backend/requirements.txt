@@ -71,7 +71,7 @@ requests
 python-dateutil
 
 
-streamlit
-requests
-pandas
-python-dotenv
+# streamlit
+# requests
+# pandas
+# python-dotenv
