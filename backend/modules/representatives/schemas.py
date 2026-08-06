@@ -44,8 +44,6 @@ from pydantic import (
 
 class RepresentativeCreate(BaseModel):
 
-    organization_id: UUID
-
     representative_name: str
 
     service: str
