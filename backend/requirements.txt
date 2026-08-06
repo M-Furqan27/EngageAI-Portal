@@ -1,32 +1,3 @@
-# fastapi
-# uvicorn[standard]
-
-# sqlalchemy
-# psycopg2-binary
-
-# pydantic
-# pydantic-settings
-# python-dotenv
-
-# python-jose[cryptography]
-# passlib==1.7.4
-# bcrypt==4.0.1
-# python-multipart
-# email-validator
-
-# google-api-python-client
-# google-auth
-
-# streamlit
-# requests
-
-# pandas
-# matplotlib
-
-# beautifulsoup4
-
-
-
 fastapi
 uvicorn[standard]
 
@@ -37,41 +8,22 @@ pydantic
 pydantic-settings
 
 python-dotenv
-
 python-multipart
 
 email-validator
 
-
-# Authentication
-python-jose[cryptography]
-passlib[bcrypt]
-
-
-# Security / Token encryption
 cryptography
 
+python-jose[cryptography]
 
-# Google Calendar OAuth
+passlib==1.7.4
+bcrypt==4.0.1
+
 google-auth
 google-auth-oauthlib
 google-auth-httplib2
 google-api-python-client
 
-
-# Email
 sendgrid
 
-
-# HTTP
 requests
-
-
-# Utilities
-python-dateutil
-
-
-# streamlit
-# requests
-# pandas
-# python-dotenv
