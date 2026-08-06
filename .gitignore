@@ -1,0 +1,56 @@
+# Environment variables
+.env
+*.env
+
+
+# Python virtual environment
+venv/
+.venv/
+
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+
+# IDE
+.vscode/
+.idea/
+
+
+# OS files
+.DS_Store
+Thumbs.db
+
+
+# Logs
+*.log
+
+
+# Database files
+*.sqlite
+*.db
+
+
+# Build files
+dist/
+build/
+
+
+# Streamlit
+.streamlit/secrets.toml
+
+
+# Google credentials
+credentials/
+*.json
+
+
+# Uploads
+uploads/
+
+
+# Node (if frontend has node)
+node_modules/
+.next/
