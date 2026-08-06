@@ -9,8 +9,11 @@ Baaki sab EXACTLY same hai jo pehle se tha.
 import requests
 import streamlit as st
 
-BASE_URL = "http://localhost:8000"   # backend ka real URL/port yahan set karo
 
+BASE_URL = st.secrets.get(
+    "API_BASE_URL",
+    "http://127.0.0.1:8000"
+)
 
 def _headers():
     token = st.session_state.get("token")
