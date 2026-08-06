@@ -501,49 +501,44 @@ with tab3:
 
         for doc in docs:
 
-
             with st.container(border=True):
 
+                if isinstance(doc, str):
+                    source_type = "File"
+                    status = "Completed"
+                    source_name = doc
 
-                source_type = doc.get(
-                    "source_type",
-                    doc.get(
-                        "type",
-                        "Unknown"
+                else:
+                    source_type = doc.get(
+                        "source_type",
+                        doc.get(
+                            "type",
+                            "Unknown"
+                        )
                     )
-                )
 
-
-                status = doc.get(
-                    "processing_status",
-                    doc.get(
-                        "status",
-                        "Completed"
+                    status = doc.get(
+                        "processing_status",
+                        doc.get(
+                            "status",
+                            "Completed"
+                        )
                     )
-                )
 
-
-                source_name = doc.get(
-                    "source_name",
-                    doc.get(
-                        "name",
-                        ""
+                    source_name = doc.get(
+                        "source_name",
+                        doc.get(
+                            "name",
+                            ""
+                        )
                     )
-                )
-
 
                 st.markdown(
                     f"**{source_type}** — {status}"
                 )
 
-
                 if source_name:
-
-                    st.caption(
-                        source_name
-                    )
-
-
+                    st.caption(source_name)
     else:
 
         st.info(
