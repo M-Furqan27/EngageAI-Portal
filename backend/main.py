@@ -53,97 +53,128 @@
 # # ... (baaki modules isi tarah add honge jab wo ban jayen)
 
 
+"""
+backend/main.py
+EngageAI Portal FastAPI Application
+"""
+
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
-from core.database import (
-    Base,
-    engine,
-)
+from core.database import Base, engine
 
-
-# Import existing Portal routers
-from modules.auth.router import (
-    router as auth_router
-)
-
-from modules.knowledge.router import (
-    router as knowledge_router
-)
-
-from modules.leads.router import (
-    router as leads_router
-)
-
-from modules.dashboard.router import (
-    router as dashboard_router
-)
-
-
-# NEW REAL REPRESENTATIVE MODULE
-
-from modules.representatives.router import (
-    router as representatives_router
-)
-
+# Routers
+from modules.auth.router import router as auth_router
+from modules.profile.router import router as profile_router
+from modules.admin.router import router as admin_router
+from modules.dashboard.router import router as dashboard_router
+from modules.knowledge.router import router as knowledge_router
+from modules.leads.router import router as leads_router
+from modules.representatives.router import router as representatives_router
+from modules.workflows.router import router as workflows_router
 
 
 # Create database tables
-
-Base.metadata.create_all(
-    bind=engine
-)
-
+Base.metadata.create_all(bind=engine)
 
 
 app = FastAPI(
     title="EngageAI Portal API",
     version="1.0.0",
+    description="AI Customer Engagement Portal Backend"
+)
+
+
+# ---------------- CORS ----------------
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "*"
+    ],
+    allow_credentials=True,
+    allow_methods=[
+        "*"
+    ],
+    allow_headers=[
+        "*"
+    ],
 )
 
 
 
+# ---------------- ROUTERS ----------------
 
 
-# Existing modules
-
+# Authentication
 app.include_router(
-    auth_router
+    auth_router,
+    tags=["Auth"]
 )
 
 
+# Profile
 app.include_router(
-    knowledge_router
+    profile_router,
+    prefix="/profile",
+    tags=["Profile"]
 )
 
 
+# Admin
 app.include_router(
-    leads_router
+    admin_router,
+    prefix="/admin",
+    tags=["Admin"]
 )
 
 
+# Dashboard
 app.include_router(
-    dashboard_router
+    dashboard_router,
+    prefix="/dashboard",
+    tags=["Dashboard"]
 )
 
 
-
-
-# Representative module
-
+# Knowledge Base
 app.include_router(
-    representatives_router
+    knowledge_router,
+    prefix="/knowledge",
+    tags=["Knowledge"]
+)
+
+
+# Leads
+app.include_router(
+    leads_router,
+    prefix="/leads",
+    tags=["Leads"]
+)
+
+
+# Representatives
+app.include_router(
+    representatives_router,
+    tags=["Representatives"]
+)
+
+
+# Workflows
+app.include_router(
+    workflows_router,
+    prefix="/workflows",
+    tags=["Workflows"]
 )
 
 
 
+# ---------------- HEALTH CHECK ----------------
 
 
 @app.get("/")
 def root():
-
     return {
-
-        "message":
-            "EngageAI Portal API running"
-
+        "status": "running",
+        "message": "EngageAI Portal API is live"
     }
