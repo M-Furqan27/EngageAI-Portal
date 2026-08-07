@@ -1,3 +1,8 @@
+
+
+
+
+
 """
 frontend/portal/0_onboarding.py
 
@@ -14,6 +19,13 @@ Finish Setup marks onboarding completed and redirects dashboard.
 import streamlit as st
 from utils import api_client
 import requests
+
+st.set_page_config(
+    page_title="EngageAI Portal",
+    page_icon="👥",
+    layout="wide",
+)
+
 
 
 # ---------------- AUTH CHECK ----------------
@@ -228,13 +240,6 @@ ORGANIZATION_ID = (
 
 
 REQUEST_TIMEOUT = 120
-
-
-st.set_page_config(
-    page_title="Representative Module",
-    page_icon="👥",
-    layout="wide",
-)
 
 
 st.title("Representative Management")
