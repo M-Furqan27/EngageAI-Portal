@@ -385,3 +385,204 @@ else:
             st.error(
                 f"Save failed ({e})"
             )
+            
+# =========================
+# REPRESENTATIVES SECTION
+# =========================
+
+
+st.divider()
+
+st.subheader(
+    "🧑‍💼 Representatives"
+)
+
+
+try:
+
+    representatives = api_client.list_representatives()
+
+except Exception as e:
+
+    representatives = []
+
+    st.error(
+        f"Representatives load nahi ho sake ({e})"
+    )
+
+
+
+if representatives:
+
+
+    for rep in representatives:
+
+        with st.container(border=True):
+
+            col1, col2, col3 = st.columns(3)
+
+
+            with col1:
+
+                st.write(
+                    "**Name**"
+                )
+
+                st.write(
+                    rep.get(
+                        "representative_name",
+                        "-"
+                    )
+                )
+
+
+            with col2:
+
+                st.write(
+                    "**Service**"
+                )
+
+                st.write(
+                    rep.get(
+                        "service",
+                        "-"
+                    )
+                )
+
+
+            with col3:
+
+                st.write(
+                    "**Email**"
+                )
+
+                st.write(
+                    rep.get(
+                        "company_email",
+                        "-"
+                    )
+                )
+
+
+else:
+
+    st.info(
+        "No representatives added yet."
+    )
+
+
+
+# =========================
+# ADD REPRESENTATIVE
+# ONLY EDIT MODE
+# =========================
+
+
+if st.session_state.profile_edit_mode:
+
+
+    st.divider()
+
+    st.subheader(
+        "Add Representative"
+    )
+
+
+    with st.form(
+        "profile_add_rep_form"
+    ):
+
+
+        representative_name = st.text_input(
+            "Representative Name"
+        )
+
+
+        service = st.text_input(
+            "Service"
+        )
+
+
+        service_description = st.text_area(
+            "Service Description"
+        )
+
+
+        company_email = st.text_input(
+            "Company Email"
+        )
+
+
+        add_rep = st.form_submit_button(
+            "Add Representative"
+        )
+
+
+
+        if add_rep:
+
+
+            if not representative_name:
+                
+                st.error(
+                    "Representative name required"
+                )
+
+
+            elif not service:
+
+                st.error(
+                    "Service required"
+                )
+
+
+            elif not company_email:
+
+                st.error(
+                    "Email required"
+                )
+
+
+            else:
+
+
+                payload = {
+
+                    "representative_name":
+                    representative_name,
+
+                    "service":
+                    service,
+
+                    "service_description":
+                    service_description,
+
+                    "company_email":
+                    company_email
+
+                }
+
+
+                try:
+
+
+                    api_client.create_representative(
+                        payload
+                    )
+
+
+                    st.success(
+                        "Representative added!"
+                    )
+
+
+                    st.rerun()
+
+
+
+                except Exception as e:
+
+
+                    st.error(
+                        f"Failed ({e})"
+                    )            
