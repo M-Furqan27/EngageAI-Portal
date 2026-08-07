@@ -1,8 +1,3 @@
-
-
-
-
-
 """
 frontend/portal/0_onboarding.py
 
@@ -20,11 +15,13 @@ import streamlit as st
 from utils import api_client
 import requests
 
+
 st.set_page_config(
     page_title="EngageAI Portal",
     page_icon="👥",
     layout="wide",
 )
+
 
 
 
