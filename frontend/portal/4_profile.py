@@ -100,7 +100,7 @@ st.set_page_config(
 
 
 # =========================
-# AUTH
+# AUTH CHECK
 # =========================
 
 if "token" not in st.session_state or st.session_state.token is None:
@@ -110,7 +110,7 @@ if "token" not in st.session_state or st.session_state.token is None:
 
 
 # =========================
-# STATE
+# EDIT MODE STATE
 # =========================
 
 if "profile_edit_mode" not in st.session_state:
@@ -119,7 +119,7 @@ if "profile_edit_mode" not in st.session_state:
 
 
 # =========================
-# LOAD ORGANIZATION DATA
+# LOAD ORGANIZATION
 # =========================
 
 try:
@@ -129,7 +129,7 @@ try:
 except Exception as e:
 
     st.error(
-        f"Profile load nahi ho saka ({e})"
+        f"Organization load nahi ho saki ({e})"
     )
 
     st.stop()
@@ -143,21 +143,22 @@ except Exception as e:
 st.title("🏢 Profile")
 
 st.caption(
-    "Manage your complete organization setup."
+    "Manage your complete business setup."
 )
 
 
 
 # =========================
-# VIEW MODE
+# ORGANIZATION SECTION
 # =========================
 
+st.subheader(
+    "🏢 Organization"
+)
+
+
+
 if not st.session_state.profile_edit_mode:
-
-
-    st.subheader(
-        "Business Information"
-    )
 
 
     col1, col2 = st.columns(2)
@@ -195,11 +196,9 @@ if not st.session_state.profile_edit_mode:
         )
 
 
-
     with col2:
 
-
-        st.write("**Phone**")
+        st.write("**Business Phone**")
 
         st.write(
             organization.get(
@@ -229,9 +228,7 @@ if not st.session_state.profile_edit_mode:
         )
 
 
-    st.write(
-        "**Description**"
-    )
+    st.write("**Description**")
 
     st.write(
         organization.get(
@@ -241,33 +238,7 @@ if not st.session_state.profile_edit_mode:
     )
 
 
-
-    st.divider()
-
-
-
-    if st.button(
-        "✏️ Edit Profile",
-        type="primary",
-        use_container_width=True
-    ):
-
-        st.session_state.profile_edit_mode = True
-
-        st.rerun()
-
-
-
-# =========================
-# EDIT MODE
-# =========================
-
 else:
-
-
-    st.subheader(
-        "Edit Profile"
-    )
 
 
     business_type = st.text_input(
@@ -331,61 +302,7 @@ else:
             ""
         )
     )
-
-
-    st.divider()
-
-
-    if st.button(
-        "💾 Save Changes",
-        type="primary",
-        use_container_width=True
-    ):
-
-
-        payload = {
-
-            "business_type": business_type,
-
-            "website": website,
-
-            "business_email": business_email,
-
-            "business_phone": business_phone,
-
-            "country": country,
-
-            "address": address,
-
-            "description": description
-
-        }
-
-
-        try:
-
-            api_client.update_organization_profile(
-                payload
-            )
-
-
-            st.success(
-                "Profile updated successfully!"
-            )
-
-
-            st.session_state.profile_edit_mode = False
-
-            st.rerun()
-
-
-
-        except Exception as e:
-
-            st.error(
-                f"Save failed ({e})"
-            )
-            
+    
 # =========================
 # REPRESENTATIVES SECTION
 # =========================
@@ -402,6 +319,7 @@ try:
 
     representatives = api_client.list_representatives()
 
+
 except Exception as e:
 
     representatives = []
@@ -412,24 +330,50 @@ except Exception as e:
 
 
 
-if representatives:
+if not representatives:
 
 
-    for rep in representatives:
+    st.info(
+        "No representatives added yet."
+    )
 
-        with st.container(border=True):
 
-            col1, col2, col3 = st.columns(3)
+else:
+
+
+    for representative in representatives:
+
+
+        representative_id = representative.get(
+            "representative_id"
+        )
+
+
+        with st.container(
+            border=True
+        ):
+
+
+            col1, col2, col3, col4, col5, col6 = st.columns(
+                [
+                    1.2,
+                    1.2,
+                    2,
+                    1.5,
+                    1.5,
+                    1
+                ]
+            )
 
 
             with col1:
 
                 st.write(
-                    "**Name**"
+                    "**Representative**"
                 )
 
                 st.write(
-                    rep.get(
+                    representative.get(
                         "representative_name",
                         "-"
                     )
@@ -443,7 +387,7 @@ if representatives:
                 )
 
                 st.write(
-                    rep.get(
+                    representative.get(
                         "service",
                         "-"
                     )
@@ -457,24 +401,81 @@ if representatives:
                 )
 
                 st.write(
-                    rep.get(
+                    representative.get(
                         "company_email",
                         "-"
                     )
                 )
 
 
-else:
+            with col4:
 
-    st.info(
-        "No representatives added yet."
-    )
+                st.write(
+                    "**Description**"
+                )
+
+                st.write(
+                    representative.get(
+                        "service_description",
+                        "-"
+                    )
+                )
+
+
+            with col5:
+
+                st.write(
+                    "**Invitation**"
+                )
+
+                st.write(
+                    representative.get(
+                        "invitation_status",
+                        "Pending"
+                    )
+                )
+
+
+            with col6:
+
+
+                if st.session_state.profile_edit_mode:
+
+
+                    if st.button(
+                        "Delete",
+                        key=f"delete_rep_{representative_id}"
+                    ):
+
+
+                        try:
+
+                            api_client.delete_representative(
+                                representative_id
+                            )
+
+
+                            st.success(
+                                "Representative deleted"
+                            )
+
+
+                            st.rerun()
+
+
+
+                        except Exception as e:
+
+
+                            st.error(
+                                f"Delete failed ({e})"
+                            )
 
 
 
 # =========================
 # ADD REPRESENTATIVE
-# ONLY EDIT MODE
+# EDIT MODE ONLY
 # =========================
 
 
@@ -483,13 +484,14 @@ if st.session_state.profile_edit_mode:
 
     st.divider()
 
+
     st.subheader(
         "Add Representative"
     )
 
 
     with st.form(
-        "profile_add_rep_form"
+        "profile_add_representative"
     ):
 
 
@@ -519,60 +521,168 @@ if st.session_state.profile_edit_mode:
 
 
 
-        if add_rep:
+    if add_rep:
 
 
-            if not representative_name:
-                
-                st.error(
-                    "Representative name required"
+        payload = {
+
+            "representative_name":
+                representative_name,
+
+            "service":
+                service,
+
+            "service_description":
+                service_description,
+
+            "company_email":
+                company_email
+
+        }
+
+
+        try:
+
+
+            api_client.create_representative(
+                payload
+            )
+
+
+            st.success(
+                "Representative added successfully!"
+            )
+
+
+            st.rerun()
+
+
+
+        except Exception as e:
+
+
+            st.error(
+                f"Add failed ({e})"
+            )
+
+
+# =========================
+# KNOWLEDGE BASE SECTION
+# =========================
+
+
+st.divider()
+
+st.subheader(
+    "📚 Knowledge Base"
+)
+
+
+st.caption(
+    "Teach your AI about your business."
+)
+
+
+
+# =========================
+# UPLOAD SECTION
+# EDIT MODE ONLY
+# =========================
+
+
+if st.session_state.profile_edit_mode:
+
+
+    kb_type = st.radio(
+        "Source type",
+        [
+            "Text",
+            "PDF",
+            "URL"
+        ],
+        horizontal=True,
+        key="profile_kb_type"
+    )
+
+
+    # -------------------------
+    # TEXT
+    # -------------------------
+
+    if kb_type == "Text":
+
+
+        text_content = st.text_area(
+            "Paste content",
+            key="profile_text_content"
+        )
+
+
+        if st.button(
+            "Upload Text →",
+            key="profile_upload_text"
+        ):
+
+
+            try:
+
+
+                api_client.upload_knowledge_text(
+                    text_content
                 )
 
 
-            elif not service:
-
-                st.error(
-                    "Service required"
+                st.success(
+                    "Text uploaded!"
                 )
 
 
-            elif not company_email:
+                st.rerun()
+
+
+
+            except Exception as e:
+
 
                 st.error(
-                    "Email required"
+                    f"Upload failed ({e})"
                 )
 
 
-            else:
+
+    # -------------------------
+    # PDF
+    # -------------------------
+
+    elif kb_type == "PDF":
 
 
-                payload = {
+        pdf_file = st.file_uploader(
+            "Upload PDF",
+            type=["pdf"],
+            key="profile_pdf"
+        )
 
-                    "representative_name":
-                    representative_name,
 
-                    "service":
-                    service,
+        if st.button(
+            "Upload PDF →",
+            key="profile_upload_pdf"
+        ):
 
-                    "service_description":
-                    service_description,
 
-                    "company_email":
-                    company_email
-
-                }
+            if pdf_file:
 
 
                 try:
 
 
-                    api_client.create_representative(
-                        payload
+                    api_client.upload_knowledge_pdf(
+                        pdf_file
                     )
 
 
                     st.success(
-                        "Representative added!"
+                        "PDF uploaded!"
                     )
 
 
@@ -584,5 +694,194 @@ if st.session_state.profile_edit_mode:
 
 
                     st.error(
-                        f"Failed ({e})"
-                    )            
+                        f"Upload failed ({e})"
+                    )
+
+
+
+    # -------------------------
+    # URL
+    # -------------------------
+
+    elif kb_type == "URL":
+
+
+        url = st.text_input(
+            "Website URL",
+            key="profile_url"
+        )
+
+
+        if st.button(
+            "Upload URL →",
+            key="profile_upload_url"
+        ):
+
+
+            try:
+
+
+                api_client.upload_knowledge_url(
+                    url
+                )
+
+
+                st.success(
+                    "URL added!"
+                )
+
+
+                st.rerun()
+
+
+
+            except Exception as e:
+
+
+                st.error(
+                    f"Upload failed ({e})"
+                )
+
+
+
+# =========================
+# KNOWLEDGE SOURCES LIST
+# =========================
+
+
+st.divider()
+
+
+st.subheader(
+    "Knowledge Sources"
+)
+
+
+
+try:
+
+    documents = api_client.list_knowledge()
+
+
+except Exception as e:
+
+
+    documents = []
+
+
+    st.error(
+        f"Knowledge load nahi hui ({e})"
+    )
+
+
+
+if documents:
+
+
+    st.caption(
+        f"{len(documents)} source(s) added"
+    )
+
+
+    for doc in documents:
+
+
+        with st.container(
+            border=True
+        ):
+
+
+            if isinstance(doc, str):
+
+
+                st.write(
+                    doc
+                )
+
+
+            else:
+
+
+                source_type = doc.get(
+                    "source_type",
+                    "Unknown"
+                )
+
+
+                status = doc.get(
+                    "processing_status",
+                    "Pending"
+                )
+
+
+                source_path = doc.get(
+                    "source_path",
+                    ""
+                )
+
+
+                st.markdown(
+                    f"**{source_type}** — {status}"
+                )
+
+
+                if source_path:
+
+
+                    st.caption(
+                        source_path
+                    )
+
+
+
+else:
+
+
+    st.info(
+        "No knowledge source added yet."
+    )
+    
+    
+# =========================
+# PROFILE ACTION BUTTONS
+# =========================
+
+
+st.divider()
+
+
+if not st.session_state.profile_edit_mode:
+
+
+    if st.button(
+        "✏️ Edit Profile",
+        type="primary",
+        use_container_width=True
+    ):
+
+
+        st.session_state.profile_edit_mode = True
+
+        st.rerun()
+
+
+
+else:
+
+
+    if st.button(
+        "💾 Save Changes",
+        type="primary",
+        use_container_width=True
+    ):
+
+
+        st.session_state.profile_edit_mode = False
+
+
+        st.success(
+            "Profile saved successfully!"
+        )
+
+
+        st.rerun()                    
