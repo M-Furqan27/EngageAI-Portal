@@ -216,361 +216,132 @@ with tab1:
 
 with tab2:
 
-    
-
-    st.header("🧑‍💼 Representatives")
-    st.caption(
-        "Add and manage company representatives."
+    st.subheader(
+        "Add your team representatives"
     )
 
-
-    API_BASE_URL = st.secrets.get(
-        "API_BASE_URL",
-        "https://engageai-portal.onrender.com",
-    )
-
-
-    ORGANIZATION_ID = (
-        "3fa85f64-5717-4562-b3fc-2c963f66afa6"
-    )
-
-
-    REQUEST_TIMEOUT = 120
-
-
-
-    def get_error_message(response):
-
-        try:
-
-            data = response.json()
-
-            detail = data.get(
-                "detail",
-                data,
-            )
-
-            return (
-                detail
-                if isinstance(detail, str)
-                else str(detail)
-            )
-
-        except:
-
-            return response.text
-
-
-
-    def fetch_representatives():
-
-        try:
-
-            response = requests.get(
-                f"{API_BASE_URL}/representatives",
-                params={
-                    "organization_id": ORGANIZATION_ID
-                },
-                timeout=REQUEST_TIMEOUT,
-            )
-
-            response.raise_for_status()
-
-            return response.json()
-
-        except Exception as e:
-
-            st.error(
-                f"Could not load representatives: {e}"
-            )
-
-            return []
-
-
-
-    def check_calendar_status(
-        representative_id
-    ):
-
-        try:
-
-            response = requests.get(
-                f"{API_BASE_URL}/representatives/{representative_id}/calendar/check",
-                timeout=REQUEST_TIMEOUT,
-            )
-
-            response.raise_for_status()
-
-            return response.json()
-
-        except:
-
-            return {
-                "connection_status":
-                    "Unknown"
-            }
-
-
-
-    def add_representative(
-        name,
-        service,
-        description,
-        email,
-    ):
-
-
-        payload = {
-
-            "organization_id":
-                ORGANIZATION_ID,
-
-            "representative_name":
-                name,
-
-            "service":
-                service,
-
-            "service_description":
-                description,
-
-            "company_email":
-                email,
-        }
-
-
-        try:
-
-            response = requests.post(
-                f"{API_BASE_URL}/representatives",
-                json=payload,
-                timeout=REQUEST_TIMEOUT,
-            )
-
-
-            if response.status_code == 201:
-
-                return True, "Representative added."
-
-
-            return False, get_error_message(response)
-
-
-        except Exception as e:
-
-            return False, str(e)
-
-
-
-    def delete_representative(
-        representative_id
-    ):
-
-        try:
-
-            response = requests.delete(
-                f"{API_BASE_URL}/representatives/{representative_id}",
-                timeout=REQUEST_TIMEOUT,
-            )
-
-            return response.status_code == 204
-
-
-        except:
-
-            return False
-
-
-
-
-    # ADD FORM
 
     with st.form(
-        "onboarding_rep_form",
-        clear_on_submit=True
+        "add_representative_form"
     ):
 
-        st.subheader(
-            "Add Representative"
+        rep_name = st.text_input(
+            "Representative name *"
         )
 
 
-        name = st.text_input(
-            "Representative Name"
+        rep_service = st.text_input(
+            "Service *",
+            placeholder="Sales"
         )
 
 
-        service = st.text_input(
-            "Service"
+        rep_desc = st.text_area(
+            "Service description"
         )
 
 
-        description = st.text_area(
-            "Service Description"
+        rep_email = st.text_input(
+            "Company email *"
         )
 
 
-        email = st.text_input(
-            "Company Email"
+        add_rep = st.form_submit_button(
+            "Add Representative →",
+            type="primary"
         )
 
 
-        submit = st.form_submit_button(
-            "Add Representative",
-            use_container_width=True
-        )
+
+    if add_rep:
+
+        if not all(
+            [
+                rep_name,
+                rep_service,
+                rep_email
+            ]
+        ):
+
+            st.error(
+                "Required fields fill karein."
+            )
 
 
-        if submit:
+        else:
+
+            try:
+
+                api_client.create_representative(
+                    {
+                        "representative_name": rep_name,
+                        "service": rep_service,
+                        "service_description": rep_desc,
+                        "company_email": rep_email
+                    }
+                )
 
 
-            if not name or not service or not description or not email:
+                st.success(
+                    "Representative added!"
+                )
+
+                st.rerun()
+
+
+            except Exception as e:
 
                 st.error(
-                    "All fields are required."
+                    f"Add fail ho gaya. ({e})"
                 )
-
-
-            else:
-
-                success, message = add_representative(
-                    name,
-                    service,
-                    description,
-                    email,
-                )
-
-
-                if success:
-
-                    st.success(message)
-                    st.rerun()
-
-                else:
-
-                    st.error(message)
 
 
 
     st.divider()
 
 
-    st.subheader(
-        "Existing Representatives"
-    )
+    try:
+
+        reps = api_client.list_representatives()
 
 
-    representatives = fetch_representatives()
+    except Exception as e:
 
+        reps = []
 
-
-    if not representatives:
-
-        st.info(
-            "No representatives added yet."
+        st.error(
+            f"Representatives load nahi huay. ({e})"
         )
 
 
-    else:
+
+    if reps:
 
 
-        for rep in representatives:
-
-
-            rep_id = rep["representative_id"]
-
-
-            calendar = check_calendar_status(
-                rep_id
-            )
+        for rep in reps:
 
 
             with st.container(border=True):
 
 
-                c1,c2,c3,c4,c5,c6 = st.columns(
-                    [
-                        1.2,
-                        1.2,
-                        2,
-                        2,
-                        1.2,
-                        1
-                    ]
+                st.markdown(
+                    f"**{rep.get('representative_name','Unknown')}**"
                 )
 
 
-                with c1:
-
-                    st.write("**Name**")
-                    st.write(
-                        rep.get(
-                            "representative_name"
-                        )
+                st.caption(
+                    rep.get(
+                        "company_email",
+                        ""
                     )
+                )
 
 
-                with c2:
+    else:
 
-                    st.write("**Service**")
-                    st.write(
-                        rep.get(
-                            "service"
-                        )
-                    )
-
-
-                with c3:
-
-                    st.write("**Email**")
-                    st.write(
-                        rep.get(
-                            "company_email"
-                        )
-                    )
-
-
-                with c4:
-
-                    st.write("**Invitation**")
-
-                    st.write(
-                        rep.get(
-                            "invitation_status",
-                            "Pending"
-                        )
-                    )
-
-
-                with c5:
-
-                    st.write("**Calendar**")
-
-                    st.write(
-                        calendar.get(
-                            "connection_status",
-                            "Unknown"
-                        )
-                    )
-
-
-                with c6:
-
-                    st.write("**Action**")
-
-
-                    if st.button(
-                        "Delete",
-                        key=f"del_{rep_id}"
-                    ):
-
-                        if delete_representative(rep_id):
-
-                            st.success(
-                                "Deleted"
-                            )
-
-                            st.rerun()
+        st.info(
+            "Abhi koi representative add nahi hua."
+        )
 
 
 

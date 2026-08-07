@@ -124,11 +124,11 @@ onboarding_page = st.Page("portal/0_onboarding.py", title="Onboarding", icon="�
 admin_page = st.Page("admin_portal/1_profiles.py", title="Admin", icon="🛠️")
 dashboard_page = st.Page("portal/3_dashboard.py", title="Dashboard", icon="📊")
 profile_page = st.Page("portal/4_profile.py", title="Profile", icon="🏢")
-# representatives_page = st.Page("portal/5_representatives.py", title="Representatives", icon="🧑‍💼")
+representatives_page = st.Page("portal/5_representatives.py", title="Representatives", icon="🧑‍💼")
 
 pg = st.navigation({
     "": [home],
-    "Account": [login_page, signup_page, onboarding_page, admin_page, dashboard_page, profile_page],
+    "Account": [login_page, signup_page, onboarding_page, admin_page, dashboard_page, profile_page, representatives_page],
     # "Widget" group hataya — chat_widget.py page ab navigation mein nahi
 })
 
