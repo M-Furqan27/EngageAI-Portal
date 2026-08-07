@@ -91,6 +91,7 @@
 # frontend/portal/4_profile.py
 
 import streamlit as st
+import requests
 from utils import api_client
 
 
