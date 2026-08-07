@@ -790,19 +790,23 @@ if st.session_state.profile_edit_mode:
 
         payload = {
 
-            "representative_name":
-                representative_name,
+    "organization_id": org.get(
+        "organization_id"
+    ),
 
-            "service":
-                service,
+    "representative_name":
+        representative_name,
 
-            "service_description":
-                service_description,
+    "service":
+        service,
 
-            "company_email":
-                company_email
+    "service_description":
+        service_description,
 
-        }
+    "company_email":
+        company_email
+
+}
 
 
         try:
