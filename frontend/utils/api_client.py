@@ -157,7 +157,7 @@ def get_leads_over_time(days: int = 30):
 def upload_knowledge_text(content: str):
 
     res = requests.post(
-        f"{BASE_URL}/text",
+        f"{BASE_URL}/knowledge/text",
         json={
             "content": content
         },
@@ -173,7 +173,7 @@ def upload_knowledge_text(content: str):
 def upload_knowledge_url(url: str):
 
     res = requests.post(
-        f"{BASE_URL}/url",
+        f"{BASE_URL}/knowledge/url",
         json={
             "url": url
         },
@@ -197,7 +197,7 @@ def upload_knowledge_pdf(file):
     }
 
     res = requests.post(
-        f"{BASE_URL}/pdf",
+        f"{BASE_URL}/knowledge/pdf",
         files=files,
         headers=_headers()
     )
@@ -211,7 +211,7 @@ def upload_knowledge_pdf(file):
 def list_knowledge():
 
     res = requests.get(
-        f"{BASE_URL}/",
+        f"{BASE_URL}/knowledge",
         headers=_headers()
     )
 
