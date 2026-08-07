@@ -1,6 +1,5 @@
 
 
-
 """
 frontend/portal/0_onboarding.py
 
@@ -229,500 +228,471 @@ with tab1:
 with tab2:
 
     API_BASE_URL = st.secrets.get(
-    "API_BASE_URL",
-    "https://engageai-portal.onrender.com",
-)
+        "API_BASE_URL",
+        "https://engageai-portal.onrender.com",
+    )
+
+    ORGANIZATION_ID = (
+        "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+    )
+
+    REQUEST_TIMEOUT = 120
+
+    st.title("Representative Management")
+
+    st.caption(
+        "Add and manage company representatives."
+    )
+
+    def get_error_message(response):
+
+        try:
+            data = response.json()
+
+            detail = data.get(
+                "detail",
+                data,
+            )
+
+            if isinstance(detail, str):
+                return detail
+
+            return str(detail)
+
+        except ValueError:
+            return (
+                response.text
+                or "Unexpected backend error."
+            )
+
+    def fetch_representatives():
+
+        try:
+
+            response = requests.get(
+                f"{API_BASE_URL}/representatives",
+                params={
+                    "organization_id": ORGANIZATION_ID,
+                },
+                timeout=REQUEST_TIMEOUT,
+            )
+
+            response.raise_for_status()
+
+            return response.json()
 
 
-ORGANIZATION_ID = (
-    "3fa85f64-5717-4562-b3fc-2c963f66afa6"
-)
+        except requests.RequestException as error:
+
+            st.error(
+                f"Could not load representatives: {error}"
+            )
+
+            return []
+
+    def check_calendar_status(
+        representative_id: str,
+    ):
+
+        try:
+
+            response = requests.get(
+                f"{API_BASE_URL}/representatives/{representative_id}/calendar/check",
+                timeout=REQUEST_TIMEOUT,
+            )
+
+            response.raise_for_status()
+
+            return response.json()
 
 
-REQUEST_TIMEOUT = 120
+        except requests.RequestException as error:
 
+            return {
+                "calendar_connected": False,
+                "connection_status": "Unknown",
+                "error": str(error),
+            }
 
-st.title("Representative Management")
-st.caption(
-    "Add and manage company representatives."
-)
+    def add_representative(
+        representative_name,
+        service,
+        service_description,
+        company_email,
+    ):
 
+        payload = {
 
+            "organization_id":
+                ORGANIZATION_ID,
 
-def get_error_message(response):
+            "representative_name":
+                representative_name,
 
-    try:
-        data = response.json()
+            "service":
+                service,
 
-        detail = data.get(
-            "detail",
-            data,
-        )
+            "service_description":
+                service_description,
 
-        if isinstance(detail, str):
-            return detail
-
-        return str(detail)
-
-    except ValueError:
-        return (
-            response.text
-            or "Unexpected backend error."
-        )
-
-
-
-def fetch_representatives():
-
-    try:
-
-        response = requests.get(
-            f"{API_BASE_URL}/representatives",
-            params={
-                "organization_id": ORGANIZATION_ID,
-            },
-            timeout=REQUEST_TIMEOUT,
-        )
-
-        response.raise_for_status()
-
-        return response.json()
-
-
-    except requests.RequestException as error:
-
-        st.error(
-            f"Could not load representatives: {error}"
-        )
-
-        return []
-
-
-
-def check_calendar_status(
-    representative_id: str,
-):
-
-    try:
-
-        response = requests.get(
-            f"{API_BASE_URL}/representatives/{representative_id}/calendar/check",
-            timeout=REQUEST_TIMEOUT,
-        )
-
-        response.raise_for_status()
-
-        return response.json()
-
-
-    except requests.RequestException as error:
-
-        return {
-            "calendar_connected": False,
-            "connection_status": "Unknown",
-            "error": str(error),
+            "company_email":
+                company_email,
         }
 
 
+        try:
 
-def add_representative(
-    representative_name,
-    service,
-    service_description,
-    company_email,
-):
-
-    payload = {
-
-        "organization_id":
-            ORGANIZATION_ID,
-
-        "representative_name":
-            representative_name,
-
-        "service":
-            service,
-
-        "service_description":
-            service_description,
-
-        "company_email":
-            company_email,
-    }
+            response = requests.post(
+                f"{API_BASE_URL}/representatives",
+                json=payload,
+                timeout=REQUEST_TIMEOUT,
+            )
 
 
-    try:
+            if response.status_code == 201:
 
-        response = requests.post(
-            f"{API_BASE_URL}/representatives",
-            json=payload,
-            timeout=REQUEST_TIMEOUT,
-        )
+                return (
+                    True,
+                    "Representative added successfully."
+                )
 
-
-        if response.status_code == 201:
 
             return (
-                True,
-                "Representative added successfully."
+                False,
+                get_error_message(response)
             )
 
 
-        return (
-            False,
-            get_error_message(response)
+        except requests.RequestException as error:
+
+            return (
+                False,
+                str(error)
+            )
+
+    def delete_representative(
+        representative_id,
+    ):
+
+        try:
+
+            response = requests.delete(
+                f"{API_BASE_URL}/representatives/{representative_id}",
+                timeout=REQUEST_TIMEOUT,
+            )
+
+
+            if response.status_code == 204:
+
+                return True
+
+
+            return False
+
+
+        except requests.RequestException:
+
+            return False
+
+    with st.form(
+        "add_representative_form",
+        clear_on_submit=True,
+    ):
+
+        st.subheader(
+            "Add Representative"
         )
 
 
-    except requests.RequestException as error:
-
-        return (
-            False,
-            str(error)
+        representative_name = st.text_input(
+            "Representative Name",
+            placeholder="Ali",
         )
 
 
-
-def delete_representative(
-    representative_id,
-):
-
-    try:
-
-        response = requests.delete(
-            f"{API_BASE_URL}/representatives/{representative_id}",
-            timeout=REQUEST_TIMEOUT,
+        service = st.text_input(
+            "Service",
+            placeholder="Vehicle Inspection",
         )
 
 
-        if response.status_code == 204:
-
-            return True
-
-
-        return False
-
-
-    except requests.RequestException:
-
-        return False
+        service_description = st.text_area(
+            "Service Description",
+            placeholder=(
+                "Describe the service provided..."
+            ),
+        )
 
 
+        company_email = st.text_input(
+            "Company Email",
+            placeholder="ali@company.com",
+        )
 
 
-
-with st.form(
-    "add_representative_form",
-    clear_on_submit=True,
-):
-
-    st.subheader(
-        "Add Representative"
-    )
+        submitted = st.form_submit_button(
+            "Add Representative",
+            use_container_width=True,
+        )
 
 
-    representative_name = st.text_input(
-        "Representative Name",
-        placeholder="Ali",
-    )
+        if submitted:
 
 
-    service = st.text_input(
-        "Service",
-        placeholder="Vehicle Inspection",
-    )
+            if not representative_name.strip():
+
+                st.error(
+                    "Representative name is required."
+                )
 
 
-    service_description = st.text_area(
-        "Service Description",
-        placeholder=(
-            "Describe the service provided..."
-        ),
-    )
+            elif not service.strip():
+
+                st.error(
+                    "Service is required."
+                )
 
 
-    company_email = st.text_input(
-        "Company Email",
-        placeholder="ali@company.com",
-    )
+            elif not service_description.strip():
+
+                st.error(
+                    "Service description is required."
+                )
 
 
-    submitted = st.form_submit_button(
-        "Add Representative",
-        use_container_width=True,
-    )
+            elif not company_email.strip():
 
-
-    if submitted:
-
-
-        if not representative_name.strip():
-
-            st.error(
-                "Representative name is required."
-            )
-
-
-        elif not service.strip():
-
-            st.error(
-                "Service is required."
-            )
-
-
-        elif not service_description.strip():
-
-            st.error(
-                "Service description is required."
-            )
-
-
-        elif not company_email.strip():
-
-            st.error(
-                "Company email is required."
-            )
-
-
-        else:
-
-            success, message = add_representative(
-                representative_name.strip(),
-                service.strip(),
-                service_description.strip(),
-                company_email.strip(),
-            )
-
-
-            if success:
-
-                st.success(message)
-
-                st.rerun()
+                st.error(
+                    "Company email is required."
+                )
 
 
             else:
 
-                st.error(message)
+                success, message = add_representative(
+                    representative_name.strip(),
+                    service.strip(),
+                    service_description.strip(),
+                    company_email.strip(),
+                )
 
 
+                if success:
 
-st.divider()
+                    st.success(message)
 
-
-st.subheader(
-    "Representatives"
-)
+                    st.rerun()
 
 
+                else:
 
-representatives = fetch_representatives()
+                    st.error(message)
 
+    st.divider()
 
-
-if not representatives:
-
-    st.info(
-        "No representatives added yet."
+    st.subheader(
+        "Representatives"
     )
 
+    representatives = fetch_representatives()
 
-else:
+    if not representatives:
 
-
-    for representative in representatives:
-
-
-        representative_id = (
-            representative[
-                "representative_id"
-            ]
+        st.info(
+            "No representatives added yet."
         )
 
 
-        # Check real Google status
-        calendar_status = check_calendar_status(
-            representative_id
-        )
+    else:
 
 
-        connection_status = (
-            calendar_status.get(
-                "connection_status",
-                "Unknown",
-            )
-        )
+        for representative in representatives:
 
 
-
-        with st.container(border=True):
-
-
-            col1, col2, col3, col4, col5, col6, col7 = st.columns(
-                [
-                    1.2,
-                    1.2,
-                    1.5,
-                    2,
-                    1.2,
-                    1.2,
-                    0.8,
+            representative_id = (
+                representative[
+                    "representative_id"
                 ]
             )
 
 
-            with col1:
+            # Check real Google status
+            calendar_status = check_calendar_status(
+                representative_id
+            )
 
-                st.write(
-                    "**Representative**"
+
+            connection_status = (
+                calendar_status.get(
+                    "connection_status",
+                    "Unknown",
                 )
-
-                st.write(
-                    representative.get(
-                        "representative_name",
-                        "Unknown",
-                    )
-                )
+            )
 
 
-            with col2:
 
-                st.write(
-                    "**Service**"
-                )
-
-                st.write(
-                    representative.get(
-                        "service",
-                        "",
-                    )
-                )
+            with st.container(border=True):
 
 
-            with col3:
-
-                st.write(
-                    "**Email**"
-                )
-
-                st.write(
-                    representative.get(
-                        "company_email",
-                        "",
-                    )
+                col1, col2, col3, col4, col5, col6, col7 = st.columns(
+                    [
+                        1.2,
+                        1.2,
+                        1.5,
+                        2,
+                        1.2,
+                        1.2,
+                        0.8,
+                    ]
                 )
 
 
-            with col4:
+                with col1:
 
-                st.write(
-                    "**Description**"
-                )
-
-                st.write(
-                    representative.get(
-                        "service_description",
-                        "",
-                    )
-                )
-
-
-            with col5:
-
-                st.write(
-                    "**Invitation**"
-                )
-
-
-                invitation = representative.get(
-                    "invitation_status",
-                    "Pending",
-                )
-
-
-                if invitation == "Sent":
-
-                    st.success(
-                        "Sent"
+                    st.write(
+                        "**Representative**"
                     )
 
-                elif invitation == "Email Failed":
-
-                    st.error(
-                        "Failed"
-                    )
-
-                else:
-
-                    st.warning(
-                        invitation
+                    st.write(
+                        representative.get(
+                            "representative_name",
+                            "Unknown",
+                        )
                     )
 
 
+                with col2:
 
-            with col6:
+                    st.write(
+                        "**Service**"
+                    )
 
-                st.write(
-                    "**Calendar**"
-                )
-
-
-                if connection_status == "Connected":
-
-                    st.success(
-                        "Connected"
+                    st.write(
+                        representative.get(
+                            "service",
+                            "",
+                        )
                     )
 
 
-                elif connection_status == "Revoked":
+                with col3:
 
-                    st.error(
-                        "Revoked"
+                    st.write(
+                        "**Email**"
+                    )
+
+                    st.write(
+                        representative.get(
+                            "company_email",
+                            "",
+                        )
                     )
 
 
-                else:
+                with col4:
 
-                    st.warning(
-                        "Not Connected"
+                    st.write(
+                        "**Description**"
+                    )
+
+                    st.write(
+                        representative.get(
+                            "service_description",
+                            "",
+                        )
                     )
 
 
+                with col5:
 
-            with col7:
-
-                st.write(
-                    "**Action**"
-                )
+                    st.write(
+                        "**Invitation**"
+                    )
 
 
-                if st.button(
-                    "Delete",
-                    key=f"delete_{representative_id}",
-                    use_container_width=True,
-                ):
+                    invitation = representative.get(
+                        "invitation_status",
+                        "Pending",
+                    )
 
-                    if delete_representative(
-                        representative_id
-                    ):
+
+                    if invitation == "Sent":
 
                         st.success(
-                            "Deleted successfully."
+                            "Sent"
                         )
 
-                        st.rerun()
+                    elif invitation == "Email Failed":
+
+                        st.error(
+                            "Failed"
+                        )
 
                     else:
 
-                        st.error(
-                            "Delete failed."
+                        st.warning(
+                            invitation
                         )
 
 
-# ============================================================
-# TAB 3 KNOWLEDGE BASE
-# ============================================================
 
+                with col6:
+
+                    st.write(
+                        "**Calendar**"
+                    )
+
+
+                    if connection_status == "Connected":
+
+                        st.success(
+                            "Connected"
+                        )
+
+
+                    elif connection_status == "Revoked":
+
+                        st.error(
+                            "Revoked"
+                        )
+
+
+                    else:
+
+                        st.warning(
+                            "Not Connected"
+                        )
+
+
+
+                with col7:
+
+                    st.write(
+                        "**Action**"
+                    )
+
+
+                    if st.button(
+                        "Delete",
+                        key=f"delete_{representative_id}",
+                        use_container_width=True,
+                    ):
+
+                        if delete_representative(
+                            representative_id
+                        ):
+
+                            st.success(
+                                "Deleted successfully."
+                            )
+
+                            st.rerun()
+
+                        else:
+
+                            st.error(
+                                "Delete failed."
+                            )
 with tab3:
 
 
