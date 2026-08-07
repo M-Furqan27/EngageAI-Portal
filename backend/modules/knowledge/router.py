@@ -43,3 +43,25 @@ def list_knowledge(
     db: Session = Depends(get_db),
 ):
     return service.get_organization_knowledge(db, current_user.organization_id)
+
+
+
+    
+    
+# ============================================================
+# Delete Knowledge Source
+# ============================================================
+
+
+@router.delete("/{knowledge_base_id}")
+def delete_knowledge(
+    knowledge_base_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+
+    return service.delete_knowledge_source(
+        db,
+        knowledge_base_id,
+        current_user.organization_id
+    )    

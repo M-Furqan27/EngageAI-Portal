@@ -88,6 +88,8 @@
 
 
 
+# frontend/portal/4_profile.py
+
 import streamlit as st
 from utils import api_client
 
@@ -110,10 +112,11 @@ if "token" not in st.session_state or st.session_state.token is None:
 
 
 # =========================
-# EDIT MODE STATE
+# PROFILE MODE
 # =========================
 
 if "profile_edit_mode" not in st.session_state:
+
     st.session_state.profile_edit_mode = False
 
 
@@ -124,12 +127,13 @@ if "profile_edit_mode" not in st.session_state:
 
 try:
 
-    organization = api_client.get_organization_profile()
+    org = api_client.get_organization_profile()
+
 
 except Exception as e:
 
     st.error(
-        f"Organization load nahi ho saki ({e})"
+        f"Profile load nahi ho saka ({e})"
     )
 
     st.stop()
@@ -143,18 +147,89 @@ except Exception as e:
 st.title("🏢 Profile")
 
 st.caption(
-    "Manage your complete business setup."
+    "Manage your organization setup."
 )
 
+
+
+# =========================
+# BUTTON CONTROL
+# =========================
+
+if not st.session_state.profile_edit_mode:
+
+
+    if st.button(
+        "✏️ Edit Profile",
+        type="primary",
+        use_container_width=True
+    ):
+
+        st.session_state.profile_edit_mode = True
+
+        st.rerun()
+
+
+
+else:
+
+
+    st.info(
+        "Edit mode enabled"
+    )
 
 
 # =========================
 # ORGANIZATION SECTION
 # =========================
 
+
+st.divider()
+
 st.subheader(
     "🏢 Organization"
 )
+
+
+
+BUSINESS_TYPES = [
+    "Retail",
+    "Healthcare",
+    "Education",
+    "Services",
+    "Other"
+]
+
+
+COUNTRIES = [
+    "Pakistan",
+    "India",
+    "Bangladesh",
+    "United Arab Emirates",
+    "Saudi Arabia",
+    "United States",
+    "United Kingdom",
+    "Canada",
+    "Australia",
+    "Germany",
+    "France",
+    "China",
+    "Japan",
+    "Turkey",
+    "Qatar",
+    "Kuwait",
+    "Oman",
+    "Bahrain",
+    "Malaysia",
+    "Indonesia",
+    "Sri Lanka",
+    "Nepal",
+    "Afghanistan",
+    "Egypt",
+    "South Africa",
+    "Nigeria",
+    "Other",
+]
 
 
 
@@ -166,30 +241,36 @@ if not st.session_state.profile_edit_mode:
 
     with col1:
 
-        st.write("**Business Type**")
+        st.write(
+            "**Business Type**"
+        )
 
         st.write(
-            organization.get(
+            org.get(
                 "business_type",
                 "-"
             )
         )
 
 
-        st.write("**Website**")
+        st.write(
+            "**Website**"
+        )
 
         st.write(
-            organization.get(
+            org.get(
                 "website",
                 "-"
             )
         )
 
 
-        st.write("**Business Email**")
+        st.write(
+            "**Business Email**"
+        )
 
         st.write(
-            organization.get(
+            org.get(
                 "business_email",
                 "-"
             )
@@ -198,111 +279,199 @@ if not st.session_state.profile_edit_mode:
 
     with col2:
 
-        st.write("**Business Phone**")
 
         st.write(
-            organization.get(
+            "**Business Phone**"
+        )
+
+        st.write(
+            org.get(
                 "business_phone",
                 "-"
             )
         )
 
 
-        st.write("**Country**")
+        st.write(
+            "**Country**"
+        )
 
         st.write(
-            organization.get(
+            org.get(
                 "country",
                 "-"
             )
         )
 
 
-        st.write("**Address**")
+        st.write(
+            "**Address**"
+        )
 
         st.write(
-            organization.get(
+            org.get(
                 "address",
                 "-"
             )
         )
 
 
-    st.write("**Description**")
+    st.write(
+        "**Description**"
+    )
 
     st.write(
-        organization.get(
+        org.get(
             "description",
             "-"
         )
     )
 
 
+
 else:
 
 
-    business_type = st.text_input(
-        "Business Type",
-        value=organization.get(
+    with st.form(
+        "profile_organization_form"
+    ):
+
+
+        current_business = org.get(
             "business_type",
-            ""
+            "Other"
         )
-    )
 
 
-    website = st.text_input(
-        "Website",
-        value=organization.get(
-            "website",
-            ""
+        business_type = st.selectbox(
+            "Business type *",
+            BUSINESS_TYPES,
+            index=(
+                BUSINESS_TYPES.index(
+                    current_business
+                )
+                if current_business in BUSINESS_TYPES
+                else 0
+            )
         )
-    )
 
 
-    business_email = st.text_input(
-        "Business Email",
-        value=organization.get(
-            "business_email",
-            ""
+        website = st.text_input(
+            "Website *",
+            value=org.get(
+                "website",
+                ""
+            )
         )
-    )
 
 
-    business_phone = st.text_input(
-        "Business Phone",
-        value=organization.get(
-            "business_phone",
-            ""
+        business_email = st.text_input(
+            "Business email *",
+            value=org.get(
+                "business_email",
+                ""
+            )
         )
-    )
 
 
-    country = st.text_input(
-        "Country",
-        value=organization.get(
+        business_phone = st.text_input(
+            "Business phone *",
+            value=org.get(
+                "business_phone",
+                ""
+            )
+        )
+
+
+        current_country = org.get(
             "country",
-            ""
+            "Pakistan"
         )
-    )
 
 
-    address = st.text_area(
-        "Address",
-        value=organization.get(
-            "address",
-            ""
+        country = st.selectbox(
+            "Country *",
+            COUNTRIES,
+            index=(
+                COUNTRIES.index(
+                    current_country
+                )
+                if current_country in COUNTRIES
+                else 0
+            )
         )
-    )
 
 
-    description = st.text_area(
-        "Description",
-        value=organization.get(
-            "description",
-            ""
+        address = st.text_area(
+            "Address",
+            value=org.get(
+                "address",
+                ""
+            )
         )
-    )
-    
+
+
+        description = st.text_area(
+            "Description",
+            value=org.get(
+                "description",
+                ""
+            )
+        )
+
+
+        save_org = st.form_submit_button(
+            "Save Organization"
+        )
+
+
+
+    if save_org:
+
+
+        payload = {
+
+            "business_type": business_type,
+
+            "website": website,
+
+            "business_email": business_email,
+
+            "business_phone": business_phone,
+
+            "country": country,
+
+            "address": address,
+
+            "description": description
+
+        }
+
+
+        try:
+
+
+            api_client.update_organization_profile(
+                payload
+            )
+
+
+            st.success(
+                "Organization updated!"
+            )
+
+
+            st.rerun()
+
+
+
+        except Exception as e:
+
+
+            st.error(
+                f"Save failed ({e})"
+            )
+            
 # =========================
 # REPRESENTATIVES SECTION
 # =========================
@@ -311,22 +480,75 @@ else:
 st.divider()
 
 st.subheader(
-    "🧑‍💼 Representatives"
+    "🧑‍💼 Representative Management"
+)
+
+st.caption(
+    "Add and manage company representatives."
 )
 
 
-try:
 
-    representatives = api_client.list_representatives()
+API_BASE_URL = st.secrets.get(
+    "API_BASE_URL",
+    "https://engageai-portal.onrender.com"
+)
 
 
-except Exception as e:
+REQUEST_TIMEOUT = 120
 
-    representatives = []
 
-    st.error(
-        f"Representatives load nahi ho sake ({e})"
-    )
+
+def fetch_representatives():
+
+    try:
+
+        response = requests.get(
+            f"{API_BASE_URL}/representatives",
+            timeout=REQUEST_TIMEOUT
+        )
+
+        response.raise_for_status()
+
+        return response.json()
+
+
+    except Exception as e:
+
+        st.error(
+            f"Representatives load nahi ho sake ({e})"
+        )
+
+        return []
+
+
+
+def check_calendar_status(
+    representative_id
+):
+
+    try:
+
+        response = requests.get(
+            f"{API_BASE_URL}/representatives/{representative_id}/calendar/check",
+            timeout=REQUEST_TIMEOUT
+        )
+
+        response.raise_for_status()
+
+        return response.json()
+
+
+    except Exception:
+
+
+        return {
+            "connection_status": "Unknown"
+        }
+
+
+
+representatives = fetch_representatives()
 
 
 
@@ -349,19 +571,32 @@ else:
         )
 
 
+        calendar_status = check_calendar_status(
+            representative_id
+        )
+
+
+        connection_status = calendar_status.get(
+            "connection_status",
+            "Unknown"
+        )
+
+
+
         with st.container(
             border=True
         ):
 
 
-            col1, col2, col3, col4, col5, col6 = st.columns(
+            col1, col2, col3, col4, col5, col6, col7 = st.columns(
                 [
                     1.2,
                     1.2,
+                    1.5,
                     2,
-                    1.5,
-                    1.5,
-                    1
+                    1.2,
+                    1.2,
+                    0.8
                 ]
             )
 
@@ -380,6 +615,7 @@ else:
                 )
 
 
+
             with col2:
 
                 st.write(
@@ -392,6 +628,7 @@ else:
                         "-"
                     )
                 )
+
 
 
             with col3:
@@ -408,6 +645,7 @@ else:
                 )
 
 
+
             with col4:
 
                 st.write(
@@ -420,6 +658,7 @@ else:
                         "-"
                     )
                 )
+
 
 
             with col5:
@@ -436,7 +675,29 @@ else:
                 )
 
 
+
             with col6:
+
+                st.write(
+                    "**Calendar**"
+                )
+
+
+                if connection_status == "Connected":
+
+                    st.success(
+                        "Connected"
+                    )
+
+                else:
+
+                    st.warning(
+                        "Not Connected"
+                    )
+
+
+
+            with col7:
 
 
                 if st.session_state.profile_edit_mode:
@@ -444,33 +705,21 @@ else:
 
                     if st.button(
                         "Delete",
-                        key=f"delete_rep_{representative_id}"
+                        key=f"profile_delete_{representative_id}"
                     ):
 
 
-                        try:
-
-                            api_client.delete_representative(
-                                representative_id
-                            )
+                        api_client.delete_representative(
+                            representative_id
+                        )
 
 
-                            st.success(
-                                "Representative deleted"
-                            )
+                        st.success(
+                            "Deleted successfully"
+                        )
 
 
-                            st.rerun()
-
-
-
-                        except Exception as e:
-
-
-                            st.error(
-                                f"Delete failed ({e})"
-                            )
-
+                        st.rerun()
 
 
 # =========================
@@ -484,14 +733,13 @@ if st.session_state.profile_edit_mode:
 
     st.divider()
 
-
     st.subheader(
         "Add Representative"
     )
 
 
     with st.form(
-        "profile_add_representative"
+        "profile_add_rep_form"
     ):
 
 
@@ -518,7 +766,6 @@ if st.session_state.profile_edit_mode:
         add_rep = st.form_submit_button(
             "Add Representative"
         )
-
 
 
     if add_rep:
@@ -550,12 +797,11 @@ if st.session_state.profile_edit_mode:
 
 
             st.success(
-                "Representative added successfully!"
+                "Representative added!"
             )
 
 
             st.rerun()
-
 
 
         except Exception as e:
@@ -564,8 +810,7 @@ if st.session_state.profile_edit_mode:
             st.error(
                 f"Add failed ({e})"
             )
-
-
+            
 # =========================
 # KNOWLEDGE BASE SECTION
 # =========================
@@ -585,64 +830,50 @@ st.caption(
 
 
 # =========================
-# UPLOAD SECTION
+# UPLOAD
 # EDIT MODE ONLY
 # =========================
-
 
 if st.session_state.profile_edit_mode:
 
 
-    kb_type = st.radio(
+    source_type = st.radio(
         "Source type",
         [
             "Text",
             "PDF",
             "URL"
         ],
-        horizontal=True,
-        key="profile_kb_type"
+        horizontal=True
     )
 
 
-    # -------------------------
-    # TEXT
-    # -------------------------
-
-    if kb_type == "Text":
+    if source_type == "Text":
 
 
         text_content = st.text_area(
-            "Paste content",
-            key="profile_text_content"
+            "Paste content"
         )
 
 
         if st.button(
-            "Upload Text →",
-            key="profile_upload_text"
+            "Upload Text"
         ):
 
-
             try:
-
 
                 api_client.upload_knowledge_text(
                     text_content
                 )
 
-
                 st.success(
-                    "Text uploaded!"
+                    "Text uploaded"
                 )
-
 
                 st.rerun()
 
 
-
             except Exception as e:
-
 
                 st.error(
                     f"Upload failed ({e})"
@@ -650,48 +881,35 @@ if st.session_state.profile_edit_mode:
 
 
 
-    # -------------------------
-    # PDF
-    # -------------------------
-
-    elif kb_type == "PDF":
+    elif source_type == "PDF":
 
 
         pdf_file = st.file_uploader(
             "Upload PDF",
-            type=["pdf"],
-            key="profile_pdf"
+            type=["pdf"]
         )
 
 
         if st.button(
-            "Upload PDF →",
-            key="profile_upload_pdf"
+            "Upload PDF"
         ):
-
 
             if pdf_file:
 
-
                 try:
-
 
                     api_client.upload_knowledge_pdf(
                         pdf_file
                     )
 
-
                     st.success(
-                        "PDF uploaded!"
+                        "PDF uploaded"
                     )
-
 
                     st.rerun()
 
 
-
                 except Exception as e:
-
 
                     st.error(
                         f"Upload failed ({e})"
@@ -699,44 +917,32 @@ if st.session_state.profile_edit_mode:
 
 
 
-    # -------------------------
-    # URL
-    # -------------------------
-
-    elif kb_type == "URL":
+    elif source_type == "URL":
 
 
         url = st.text_input(
-            "Website URL",
-            key="profile_url"
+            "Website URL"
         )
 
 
         if st.button(
-            "Upload URL →",
-            key="profile_upload_url"
+            "Upload URL"
         ):
 
-
             try:
-
 
                 api_client.upload_knowledge_url(
                     url
                 )
 
-
                 st.success(
-                    "URL added!"
+                    "URL uploaded"
                 )
-
 
                 st.rerun()
 
 
-
             except Exception as e:
-
 
                 st.error(
                     f"Upload failed ({e})"
@@ -745,17 +951,15 @@ if st.session_state.profile_edit_mode:
 
 
 # =========================
-# KNOWLEDGE SOURCES LIST
+# EXISTING SOURCES
 # =========================
 
 
 st.divider()
 
-
 st.subheader(
     "Knowledge Sources"
 )
-
 
 
 try:
@@ -765,12 +969,10 @@ try:
 
 except Exception as e:
 
-
     documents = []
 
-
     st.error(
-        f"Knowledge load nahi hui ({e})"
+        f"Knowledge load failed ({e})"
     )
 
 
@@ -791,97 +993,58 @@ if documents:
         ):
 
 
-            if isinstance(doc, str):
+            col1, col2 = st.columns(
+                [5,1]
+            )
+
+
+            with col1:
 
 
                 st.write(
-                    doc
+                    f"**{doc.get('source_type')}** — {doc.get('processing_status')}"
                 )
 
 
-            else:
-
-
-                source_type = doc.get(
-                    "source_type",
-                    "Unknown"
-                )
-
-
-                status = doc.get(
-                    "processing_status",
-                    "Pending"
-                )
-
-
-                source_path = doc.get(
-                    "source_path",
-                    ""
-                )
-
-
-                st.markdown(
-                    f"**{source_type}** — {status}"
-                )
-
-
-                if source_path:
-
-
-                    st.caption(
-                        source_path
+                st.caption(
+                    doc.get(
+                        "source_path",
+                        ""
                     )
+                )
 
+
+
+            with col2:
+
+
+                if st.session_state.profile_edit_mode:
+
+
+                    if st.button(
+                        "Delete",
+                        key=f"delete_kb_{doc.get('knowledge_base_id')}"
+                    ):
+
+
+                        api_client.delete_knowledge(
+                            doc.get(
+                                "knowledge_base_id"
+                            )
+                        )
+
+
+                        st.success(
+                            "Deleted"
+                        )
+
+
+                        st.rerun()
 
 
 else:
 
 
     st.info(
-        "No knowledge source added yet."
-    )
-    
-    
-# =========================
-# PROFILE ACTION BUTTONS
-# =========================
-
-
-st.divider()
-
-
-if not st.session_state.profile_edit_mode:
-
-
-    if st.button(
-        "✏️ Edit Profile",
-        type="primary",
-        use_container_width=True
-    ):
-
-
-        st.session_state.profile_edit_mode = True
-
-        st.rerun()
-
-
-
-else:
-
-
-    if st.button(
-        "💾 Save Changes",
-        type="primary",
-        use_container_width=True
-    ):
-
-
-        st.session_state.profile_edit_mode = False
-
-
-        st.success(
-            "Profile saved successfully!"
-        )
-
-
-        st.rerun()                    
+        "No knowledge sources added."
+    )                                                    

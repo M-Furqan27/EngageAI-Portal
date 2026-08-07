@@ -57,3 +57,15 @@ def upload_url(url: str):
     )
 
     return blob_client.url
+
+
+def delete_blob(blob_url: str):
+
+    blob_name = blob_url.split("/")[-1]
+
+    blob_client = container_client.get_blob_client(
+        blob_name
+    )
+
+    blob_client.delete_blob()
+  
