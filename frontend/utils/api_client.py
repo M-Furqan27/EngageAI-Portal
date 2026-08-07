@@ -309,7 +309,19 @@ def list_representatives():
 
     return res.json()
 
+# ---------------- DELETE REPRESENTATIVE ----------------
 
+
+def delete_representative(representative_id: str):
+
+    res = requests.delete(
+        f"{BASE_URL}/representatives/{representative_id}",
+        headers=_headers()
+    )
+
+    res.raise_for_status()
+
+    return True
 
 # ---------------- DELETE KNOWLEDGE ----------------
 

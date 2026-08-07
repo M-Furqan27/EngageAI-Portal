@@ -174,10 +174,26 @@ if not st.session_state.profile_edit_mode:
 
 else:
 
+    col1, col2 = st.columns(2)
 
-    st.info(
-        "Edit mode enabled"
-    )
+
+    with col1:
+
+        st.info(
+            "Edit mode enabled"
+        )
+
+
+    with col2:
+
+        if st.button(
+            "❌ Cancel Edit",
+            use_container_width=True
+        ):
+
+            st.session_state.profile_edit_mode = False
+
+            st.rerun()
 
 
 # =========================
