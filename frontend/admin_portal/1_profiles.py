@@ -1,5 +1,8 @@
 import streamlit as st
 from utils import api_client
+from utils.theme import inject_custom_css
+
+inject_custom_css()
 
 if "token" not in st.session_state or st.session_state.token is None:
     st.warning("Pehle login karein.")

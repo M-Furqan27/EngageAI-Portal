@@ -1,14 +1,17 @@
 """
 frontend/portal/2_signup.py
 
-Ek hi simple form: Organization NAME + Owner account.
-Signup ke baad auto-login NAHI hota — client ko khud apne
-credentials se Login page par jaake login karna hota hai,
-tabhi Onboarding khulti hai.
+REPLACE the existing file. Ab do-step wizard nahi — ek hi simple form:
+sirf Organization NAME (poori profile nahi) + Owner account.
+Baaki organization details (business type, website, phone, country, ...)
+pehli baar login karne pe onboarding wizard mein bharni hain.
 """
 
 import streamlit as st
 from utils import api_client
+from utils.theme import inject_custom_css
+
+inject_custom_css()
 
 COUNTRY_CODES = [
     ("+92", "Pakistan"), ("+91", "India"), ("+880", "Bangladesh"),
@@ -34,7 +37,7 @@ def phone_input(label_prefix: str, key_prefix: str):
 
 
 st.title("🆕 Create your account")
-st.caption("Bas apna organization ka naam aur apna account bana lo — baaki details login ke baad complete karoge.")
+st.caption("Bas apna organization ka naam aur apna account bana lo — baaki details pehli login ke baad complete karoge.")
 
 with st.form("signup_form"):
     organization_name = st.text_input("Organization name *", placeholder="e.g. Sindh Furniture Co.")
@@ -70,9 +73,10 @@ if submitted:
             "password": password,
         }
         try:
-            api_client.register_organization_and_owner(payload)
-            # Token/session set NAHI karte — signup sirf account banata
-            # hai. Client ko khud login karna hoga, tabhi onboarding khulegi.
+            data = api_client.register_organization_and_owner(payload)
+            # Token ko session mein set NAHI karte — chahte hain client
+            # signup ke baad khud apne credentials se Login page par jaake
+            # login kare (auto-login nahi).
             st.success(f"'{organization_name}' create ho gayi! Ab login karein.")
             st.switch_page("portal/1_login.py")
         except Exception as e:

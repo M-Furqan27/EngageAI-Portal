@@ -1,6 +1,9 @@
 import streamlit as st
+from utils.theme import inject_custom_css, anchor, render_footer
 
 st.set_page_config(page_title="AI Chatbot Platform", page_icon="🟠", layout="wide")
+
+inject_custom_css()
 
 if "token" not in st.session_state:
     st.session_state.token = None
@@ -66,9 +69,10 @@ def sequence_section():
 
 
 # ============================================================
-# FEATURES — 3 cards
+# FEATURES — 3 cards ("Services")
 # ============================================================
 def features_section():
+    anchor("services")
     st.caption("INSIDE YOUR DASHBOARD")
     st.header("Everything in one view")
 
@@ -90,6 +94,58 @@ def features_section():
 
 
 # ============================================================
+# ABOUT
+# ============================================================
+def about_section():
+    anchor("about")
+    st.caption("ABOUT US")
+    st.header("Built for businesses that never stop")
+
+    left, right = st.columns([1.1, 0.9], gap="large")
+    with left:
+        st.write(
+            "EngageAI ek AI-powered customer engagement platform hai jo "
+            "chhoti aur medium businesses ko unke leads, representatives, "
+            "knowledge base aur meetings ek hi jagah se manage karne mein "
+            "madad deta hai — bina extra headcount ke."
+        )
+        st.write(
+            "Hamara maqsad simple hai: har business ka front desk 24/7 "
+            "chalta rahe, chahe office band ho ya khula."
+        )
+    with right:
+        with st.container(border=True):
+            st.markdown("**Why EngageAI**")
+            st.caption("✔ Setup in under 10 minutes")
+            st.caption("✔ No credit card required to start")
+            st.caption("✔ Built for Sales, Support & Finance teams")
+            st.caption("✔ Your data, your organization, always")
+
+
+# ============================================================
+# CONTACT
+# ============================================================
+def contact_section():
+    anchor("contact")
+    st.caption("CONTACT")
+    st.header("Get in touch")
+
+    c1, c2, c3 = st.columns(3)
+    with c1:
+        with st.container(border=True):
+            st.markdown("**📧 Email**")
+            st.caption("hello@engageai.app")
+    with c2:
+        with st.container(border=True):
+            st.markdown("**📞 Phone**")
+            st.caption("+92 300 0000000")
+    with c3:
+        with st.container(border=True):
+            st.markdown("**📍 Location**")
+            st.caption("Sindh, Pakistan")
+
+
+# ============================================================
 # CTA BAND
 # ============================================================
 def cta_section():
@@ -106,14 +162,19 @@ def cta_section():
 # HOME PAGE
 # ============================================================
 def home_page():
+    anchor("top")
     hero_section()
     st.divider()
     sequence_section()
     st.divider()
     features_section()
     st.divider()
+    about_section()
+    st.divider()
+    contact_section()
+    st.divider()
     cta_section()
-    st.caption("© 2026 EngageAI · Built for the Mari Energies Bootcamp — AI & Agentic Development")
+    render_footer()
 
 
 # ============================================================

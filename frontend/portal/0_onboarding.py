@@ -16,6 +16,9 @@ Finish Setup marks onboarding completed and redirects dashboard.
 import streamlit as st
 from utils import api_client
 import requests
+from utils.theme import inject_custom_css
+
+inject_custom_css()
 
 
 st.set_page_config(

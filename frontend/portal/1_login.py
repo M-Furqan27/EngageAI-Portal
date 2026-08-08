@@ -8,6 +8,9 @@ warna seedha normal dashboard.
 
 import streamlit as st
 from utils import api_client
+from utils.theme import inject_custom_css
+
+inject_custom_css()
 
 if "token" not in st.session_state:
     st.session_state.token = None

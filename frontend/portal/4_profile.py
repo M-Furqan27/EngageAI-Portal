@@ -94,6 +94,7 @@ import streamlit as st
 import requests
 from utils import api_client
 from utils.sidebar import render_account_sidebar
+from utils.theme import inject_custom_css
 
 
 st.set_page_config(
@@ -101,6 +102,8 @@ st.set_page_config(
     page_icon="🏢",
     layout="wide"
 )
+
+inject_custom_css()
 
 
 # =========================
