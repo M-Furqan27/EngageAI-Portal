@@ -2,7 +2,7 @@ import streamlit as st
 
 
 def render_account_sidebar():
-    """Render the logged-in user's professional account section."""
+    """Render only the logged-in user's account section."""
 
     user = st.session_state.get("user") or {}
 
@@ -10,25 +10,17 @@ def render_account_sidebar():
     last_name = user.get("last_name", "")
 
     name = f"{first_name} {last_name}".strip() or "User"
-
     role = user.get("role") or "Owner"
-
-    # Initials
-    initials = "".join(
-        part[0].upper()
-        for part in name.split()
-        if part
-    )[:2] or "U"
 
     with st.sidebar:
 
+        # Space between navigation and account
+        st.write("")
+
         st.divider()
 
-        # ====================================================
-        # LOGGED-IN USER
-        # ====================================================
-
-        st.markdown("### 👤")
+        # Logged-in user
+        st.markdown("👤")
 
         st.markdown(
             f"**{name}**"
@@ -42,18 +34,14 @@ def render_account_sidebar():
             "● Active session"
         )
 
-        # ====================================================
-        # LOGOUT
-        # ====================================================
-
         st.divider()
 
+        # Logout
         if st.button(
             "🚪  Log out",
             use_container_width=True,
             key="sidebar_logout",
         ):
-
             st.session_state.token = None
             st.session_state.user = None
             st.session_state.onboarding_completed = False
