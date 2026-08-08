@@ -257,32 +257,27 @@ if not st.session_state.profile_edit_mode:
 
         st.divider()
 
-        col1, col2 = st.columns(2)
+        col1, col2 = st.columns([5, 1.4])
 
         with col1:
+            st.write("**Knowledge Sources**")
 
-            st.write("🌐 **Website**")
+        with col2:
 
-            website = display_value(
-                org.get("website")
+            button_text = (
+                "✕ Close"
+                if st.session_state.show_knowledge_upload
+                else "＋ Add Source"
             )
 
-            if website != "Not provided":
-                st.write(website)
-            else:
-                st.caption(website)
-
-            st.write("📧 **Business email**")
-
-            business_email = display_value(
-                org.get("business_email")
-            )
-
-            if business_email != "Not provided":
-                st.write(business_email)
-            else:
-                st.caption(business_email)
-
+            if st.button(
+                button_text,
+                use_container_width=True,
+            ):
+                st.session_state.show_knowledge_upload = (
+                    not st.session_state.show_knowledge_upload
+                )
+                st.rerun()
         with col2:
 
             st.write("📞 **Business phone**")
