@@ -173,40 +173,40 @@ st.markdown(
 
 st.markdown(
     """
-    <div class="signup-page">
+<div class="signup-page">
 
-        <div class="signup-brand">
+    <div class="signup-brand">
 
-            <div class="signup-brand-icon">
-                E
-            </div>
-
-            <div class="signup-brand-name">
-                EngageAI
-            </div>
-
-            <div class="signup-brand-caption">
-                Intelligent business communication
-            </div>
-
+        <div class="signup-brand-icon">
+            E
         </div>
 
-        <div class="signup-header">
+        <div class="signup-brand-name">
+            EngageAI
+        </div>
 
-            <div class="signup-title">
-                Create your account
-            </div>
-
-            <div class="signup-description">
-                Start your business workspace in a few simple steps.
-                You can complete the rest of your business profile
-                after your first login.
-            </div>
-
+        <div class="signup-brand-caption">
+            Intelligent business communication
         </div>
 
     </div>
-    """,
+
+    <div class="signup-header">
+
+        <div class="signup-title">
+            Create your account
+        </div>
+
+        <div class="signup-description">
+            Start your business workspace in a few simple steps.
+            You can complete the rest of your business profile
+            after your first login.
+        </div>
+
+    </div>
+
+</div>
+""",
     unsafe_allow_html=True,
 )
 
