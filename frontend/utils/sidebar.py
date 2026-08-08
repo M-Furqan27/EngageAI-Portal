@@ -2,7 +2,10 @@ import streamlit as st
 
 
 def render_account_sidebar():
-    """Render the logged-in user's professional account section."""
+    """
+    Minimal professional EngageAI sidebar.
+    Navigation is handled by Streamlit's navigation system.
+    """
 
     user = st.session_state.get("user") or {}
 
@@ -11,55 +14,59 @@ def render_account_sidebar():
 
     name = f"{first_name} {last_name}".strip() or "User"
 
-    role = user.get("role") or "Owner"
+    role = user.get("role", "Owner")
 
-    # Initials
-    initials = "".join(
-        part[0].upper()
-        for part in name.split()
-        if part
-    )[:2] or "U"
+    # ========================================================
+    # SIDEBAR
+    # ========================================================
 
     with st.sidebar:
 
-        # ====================================================
-        # ENGAGEAI BRAND
-        # ====================================================
+        # ----------------------------------------------------
+        # BRAND
+        # ----------------------------------------------------
 
-        st.markdown("## ✨ EngageAI")
+        st.markdown(
+            "## ✨ EngageAI"
+        )
+
+        st.markdown(
+            "<div style='height:0.5rem'></div>",
+            unsafe_allow_html=True,
+        )
+
+        # ----------------------------------------------------
+        # ACCOUNT AREA
+        # ----------------------------------------------------
+
+        st.markdown(
+            "<div style='height:8rem'></div>",
+            unsafe_allow_html=True,
+        )
 
         st.divider()
 
-        # ====================================================
-        # LOGGED-IN USER
-        # ====================================================
-
-        st.markdown("### 👤")
+        # ----------------------------------------------------
+        # USER
+        # ----------------------------------------------------
 
         st.markdown(
-            f"**{name}**"
+            f"👤 **{name}**"
         )
 
         st.caption(
-            f"{role.title()} · Signed in"
+            role.title()
         )
 
-        st.success(
-            "● Active session"
-        )
-
-        # ====================================================
+        # ----------------------------------------------------
         # LOGOUT
-        # ====================================================
-
-        st.divider()
+        # ----------------------------------------------------
 
         if st.button(
             "🚪  Log out",
             use_container_width=True,
             key="sidebar_logout",
         ):
-
             st.session_state.token = None
             st.session_state.user = None
             st.session_state.onboarding_completed = False
