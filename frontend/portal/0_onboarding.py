@@ -910,6 +910,7 @@ if st.button(
 
         api_client.complete_onboarding()
 
+        st.session_state.onboarding_completed = True
 
         st.success(
             "Setup complete!"

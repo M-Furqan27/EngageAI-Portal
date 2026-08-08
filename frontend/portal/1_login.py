@@ -33,7 +33,9 @@ if submitted:
 
             # Onboarding complete hui ya nahi, check karo
             org = api_client.get_organization_profile()
-            if org.get("onboarding_completed"):
+            st.session_state.onboarding_completed = bool(org.get("onboarding_completed"))
+
+            if st.session_state.onboarding_completed:
                 st.switch_page("portal/3_dashboard.py")
             else:
                 st.switch_page("portal/0_onboarding.py")

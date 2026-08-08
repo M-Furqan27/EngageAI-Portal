@@ -7,6 +7,14 @@ if "token" not in st.session_state or st.session_state.token is None:
     st.warning("Pehle login karein.")
     st.stop()
 
+with st.sidebar:
+    st.divider()
+    if st.button("🚪 Log out", use_container_width=True):
+        st.session_state.token = None
+        st.session_state.user = None
+        st.session_state.onboarding_completed = False
+        st.switch_page("app.py")
+
 st.title("📊 Dashboard")
 st.caption(f"Welcome, {st.session_state.user.get('first_name', '')}")
 

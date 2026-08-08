@@ -5,6 +5,8 @@ st.set_page_config(page_title="AI Chatbot Platform", page_icon="🟠", layout="w
 if "token" not in st.session_state:
     st.session_state.token = None
     st.session_state.user = None
+if "onboarding_completed" not in st.session_state:
+    st.session_state.onboarding_completed = False
 
 
 # ============================================================
@@ -115,7 +117,7 @@ def home_page():
 
 
 # ============================================================
-# NAVIGATION
+# NAVIGATION (session state ke hisaab se pages control hote hain)
 # ============================================================
 home = st.Page(home_page, title="Home", icon="🏠", default=True)
 login_page = st.Page("portal/1_login.py", title="Log in", icon="🔑")
@@ -124,12 +126,23 @@ onboarding_page = st.Page("portal/0_onboarding.py", title="Onboarding", icon="�
 admin_page = st.Page("admin_portal/1_profiles.py", title="Admin", icon="🛠️")
 dashboard_page = st.Page("portal/3_dashboard.py", title="Dashboard", icon="📊")
 profile_page = st.Page("portal/4_profile.py", title="Profile", icon="🏢")
-# representatives_page = st.Page("portal/5_representatives.py", title="Representatives", icon="🧑‍💼")
 
-pg = st.navigation({
-    "": [home],
-    "Account": [login_page, signup_page, onboarding_page, admin_page, dashboard_page, profile_page],
-    # "Widget" group hataya — chat_widget.py page ab navigation mein nahi
-})
+is_logged_in = st.session_state.token is not None
+onboarding_done = st.session_state.onboarding_completed
+is_admin = is_logged_in and st.session_state.user and st.session_state.user.get("role") == "admin"
 
+if not is_logged_in:
+    # Client abhi tak login nahi — sirf marketing home + login/signup
+    nav_pages = {"": [home], "Account": [login_page, signup_page]}
+elif is_logged_in and not onboarding_done:
+    # Login ho gaya lekin onboarding baaki — sirf onboarding show hoga
+    nav_pages = {"Setup": [onboarding_page]}
+else:
+    # Onboarding complete — sirf dashboard + profile (+ admin agar role admin hai)
+    pages = [dashboard_page, profile_page]
+    if is_admin:
+        pages.append(admin_page)
+    nav_pages = {"Workspace": pages}
+
+pg = st.navigation(nav_pages)
 pg.run()
