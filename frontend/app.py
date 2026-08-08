@@ -2,6 +2,15 @@ import streamlit as st
 
 st.set_page_config(page_title="AI Chatbot Platform", page_icon="🟠", layout="wide")
 
+# Streamlit ki auto-generated sidebar page-list hide karo —
+# pages navigation dict mein rehte hain (switch_page ke liye zaroori),
+# bas unki auto-list sidebar mein render nahi hogi. Navigation sirf
+# buttons/code se (st.switch_page) control hoga.
+st.markdown(
+    "<style>[data-testid='stSidebarNav'] {display: none;}</style>",
+    unsafe_allow_html=True,
+)
+
 if "token" not in st.session_state:
     st.session_state.token = None
     st.session_state.user = None
@@ -10,7 +19,7 @@ if "onboarding_completed" not in st.session_state:
 
 
 # ============================================================
-# HERO — headline + live chat mockup
+# HERO — headline + live chat mockup (st.chat_message se, koi custom CSS nahi)
 # ============================================================
 def hero_section():
     left, right = st.columns([1.05, 0.95], gap="large")
@@ -33,6 +42,7 @@ def hero_section():
     with right:
         with st.container(border=True):
             st.subheader("Platform Overview")
+
             st.success("✔ Organization Created")
             st.success("✔ Representatives Added")
             st.success("✔ Knowledge Base Ready")
@@ -42,7 +52,7 @@ def hero_section():
 
 
 # ============================================================
-# SEQUENCE
+# SEQUENCE — "What happens after hours" 4 steps
 # ============================================================
 def sequence_section():
     st.caption("WHILE YOU SLEEP")
@@ -65,7 +75,7 @@ def sequence_section():
 
 
 # ============================================================
-# FEATURES
+# FEATURES — 3 cards
 # ============================================================
 def features_section():
     st.caption("INSIDE YOUR DASHBOARD")
@@ -116,7 +126,7 @@ def home_page():
 
 
 # ============================================================
-# NAVIGATION
+# NAVIGATION (session state ke hisaab se pages control hote hain)
 # ============================================================
 home = st.Page(home_page, title="Home", icon="🏠", default=True)
 login_page = st.Page("portal/1_login.py", title="Log in", icon="🔑")
@@ -131,17 +141,13 @@ onboarding_done = st.session_state.onboarding_completed
 is_admin = is_logged_in and st.session_state.user and st.session_state.user.get("role") == "admin"
 
 if not is_logged_in:
-    # Login/Signup navigation dict mein zaroor rahenge (switch_page ke liye zaroori hai),
-    # lekin sidebar list CSS se hide hai — sirf "Home" label cosmetic dikhta hai.
+    # Client abhi tak login nahi — sirf marketing home + login/signup
     nav_pages = {"": [home], "Account": [login_page, signup_page]}
-    st.markdown(
-        "<style>[data-testid='stSidebarNav'] {display: none;}</style>",
-        unsafe_allow_html=True,
-    )
-    st.sidebar.markdown("### 🏠 Home")
 elif is_logged_in and not onboarding_done:
+    # Login ho gaya lekin onboarding baaki — sirf onboarding show hoga
     nav_pages = {"Setup": [onboarding_page]}
 else:
+    # Onboarding complete — sirf dashboard + profile (+ admin agar role admin hai)
     pages = [dashboard_page, profile_page]
     if is_admin:
         pages.append(admin_page)
