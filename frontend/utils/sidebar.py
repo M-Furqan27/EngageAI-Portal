@@ -10,7 +10,6 @@ def render_account_sidebar():
     name = f"{first_name} {last_name}".strip() or "Account"
     email = user.get("email", "")
 
-    # Initials
     initials = "".join(
         part[0].upper()
         for part in name.split()
@@ -29,8 +28,9 @@ def render_account_sidebar():
                 display:flex;
                 align-items:center;
                 gap:10px;
-                padding:0.5rem 0.4rem 1.4rem 0.4rem;
+                padding:0.35rem 0.4rem 1.35rem 0.4rem;
             ">
+
                 <div style="
                     width:38px;
                     height:38px;
@@ -39,7 +39,7 @@ def render_account_sidebar():
                     align-items:center;
                     justify-content:center;
                     background:linear-gradient(135deg,#FF4B3E,#E63E33);
-                    color:white;
+                    color:#FFFFFF;
                     font-size:17px;
                     font-weight:800;
                     box-shadow:0 7px 20px rgba(255,75,62,0.22);
@@ -65,63 +65,14 @@ def render_account_sidebar():
                         Business Portal
                     </div>
                 </div>
+
             </div>
             """,
             unsafe_allow_html=True,
         )
 
         # =====================================================
-        # WORKSPACE
-        # =====================================================
-
-        st.markdown(
-            """
-            <div style="
-                color:#737D8C;
-                font-size:0.68rem;
-                font-weight:700;
-                letter-spacing:0.08em;
-                text-transform:uppercase;
-                padding:0.35rem 0.45rem 0.55rem 0.45rem;
-            ">
-                Workspace
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-
-        # Navigation buttons
-        if st.button(
-            "📊  Dashboard",
-            use_container_width=True,
-            key="sidebar_dashboard",
-        ):
-            st.switch_page("portal/3_dashboard.py")
-
-        if st.button(
-            "👤  Profile",
-            use_container_width=True,
-            key="sidebar_profile",
-        ):
-            st.switch_page("portal/4_profile.py")
-
-        # =====================================================
-        # SEPARATOR
-        # =====================================================
-
-        st.markdown(
-            """
-            <div style="
-                height:1px;
-                background:rgba(255,255,255,0.07);
-                margin:1.1rem 0;
-            "></div>
-            """,
-            unsafe_allow_html=True,
-        )
-
-        # =====================================================
-        # ACCOUNT CARD
+        # ACCOUNT
         # =====================================================
 
         st.markdown(
@@ -188,7 +139,8 @@ def render_account_sidebar():
                     color:#737D8C;
                     font-size:0.68rem;
                 ">
-                    ● Account active
+                    <span style="color:#22C55E;">●</span>
+                    Account active
                 </div>
 
             </div>
@@ -196,11 +148,14 @@ def render_account_sidebar():
             unsafe_allow_html=True,
         )
 
+        st.markdown(
+            "<div style='height:0.7rem'></div>",
+            unsafe_allow_html=True,
+        )
+
         # =====================================================
         # LOGOUT
         # =====================================================
-
-        st.markdown("<div style='height:0.7rem'></div>", unsafe_allow_html=True)
 
         if st.button(
             "🚪  Log out",
