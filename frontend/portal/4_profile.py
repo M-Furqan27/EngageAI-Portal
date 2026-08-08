@@ -961,156 +961,211 @@ if not st.session_state.profile_edit_mode:
                             processing_status
                         )
 
-
 # ============================================================
 # KNOWLEDGE — EDIT MODE
 # ============================================================
 
 else:
 
-    st.info(
-        "Edit mode: add or remove knowledge sources below."
-    )
-
-    source_type = st.radio(
-        "Source type",
-        [
-            "Text",
-            "PDF",
-            "URL",
-        ],
-        horizontal=True,
+    st.caption(
+        "Manage the information your AI assistant uses."
     )
 
     # --------------------------------------------------------
-    # TEXT
+    # ADD SOURCE TOGGLE
     # --------------------------------------------------------
 
-    if source_type == "Text":
+    if "show_knowledge_upload" not in st.session_state:
+        st.session_state.show_knowledge_upload = False
 
-        text_content = st.text_area(
-            "Content",
-            placeholder=(
-                "Paste business information, FAQs, "
-                "services, pricing, policies, etc."
-            ),
-            height=180,
+    col1, col2 = st.columns([4, 1.2])
+
+    with col1:
+        st.write(
+            "**Knowledge sources**"
+        )
+
+    with col2:
+
+        button_text = (
+            "✕ Close"
+            if st.session_state.show_knowledge_upload
+            else "＋ Add Source"
         )
 
         if st.button(
-            "Upload Text",
-            type="primary",
+            button_text,
+            use_container_width=True,
         ):
 
-            if not text_content.strip():
+            st.session_state.show_knowledge_upload = (
+                not st.session_state.show_knowledge_upload
+            )
 
-                st.warning(
-                    "Please enter some content first."
+            st.rerun()
+
+
+    # --------------------------------------------------------
+    # UPLOAD PANEL — ONLY WHEN OPEN
+    # --------------------------------------------------------
+
+    if st.session_state.show_knowledge_upload:
+
+        st.write("")
+
+        with st.container(border=True):
+
+            st.markdown(
+                "#### Add Knowledge Source"
+            )
+
+            source_type = st.radio(
+                "Source type",
+                [
+                    "Text",
+                    "PDF",
+                    "URL",
+                ],
+                horizontal=True,
+            )
+
+            # ------------------------------------------------
+            # TEXT
+            # ------------------------------------------------
+
+            if source_type == "Text":
+
+                text_content = st.text_area(
+                    "Content",
+                    placeholder=(
+                        "Paste business information, FAQs, "
+                        "services, pricing, policies, etc."
+                    ),
+                    height=130,
                 )
 
-            else:
+                if st.button(
+                    "Upload Text",
+                    type="primary",
+                ):
 
-                try:
+                    if not text_content.strip():
 
-                    api_client.upload_knowledge_text(
-                        text_content
-                    )
+                        st.warning(
+                            "Please enter some content first."
+                        )
 
-                    st.success(
-                        "Text uploaded successfully!"
-                    )
+                    else:
 
-                    st.rerun()
+                        try:
 
-                except Exception as e:
+                            api_client.upload_knowledge_text(
+                                text_content
+                            )
 
-                    st.error(
-                        f"Upload failed. ({e})"
-                    )
+                            st.success(
+                                "Text uploaded successfully!"
+                            )
 
-    # --------------------------------------------------------
-    # PDF
-    # --------------------------------------------------------
+                            st.session_state.show_knowledge_upload = False
 
-    elif source_type == "PDF":
+                            st.rerun()
 
-        pdf_file = st.file_uploader(
-            "Upload PDF",
-            type=["pdf"],
-        )
+                        except Exception as e:
 
-        if st.button(
-            "Upload PDF",
-            type="primary",
-        ):
+                            st.error(
+                                f"Upload failed. ({e})"
+                            )
 
-            if pdf_file is None:
 
-                st.warning(
-                    "Please select a PDF first."
+            # ------------------------------------------------
+            # PDF
+            # ------------------------------------------------
+
+            elif source_type == "PDF":
+
+                pdf_file = st.file_uploader(
+                    "Upload PDF",
+                    type=["pdf"],
                 )
 
-            else:
+                if st.button(
+                    "Upload PDF",
+                    type="primary",
+                ):
 
-                try:
+                    if pdf_file is None:
 
-                    api_client.upload_knowledge_pdf(
-                        pdf_file
-                    )
+                        st.warning(
+                            "Please select a PDF first."
+                        )
 
-                    st.success(
-                        "PDF uploaded successfully!"
-                    )
+                    else:
 
-                    st.rerun()
+                        try:
 
-                except Exception as e:
+                            api_client.upload_knowledge_pdf(
+                                pdf_file
+                            )
 
-                    st.error(
-                        f"Upload failed. ({e})"
-                    )
+                            st.success(
+                                "PDF uploaded successfully!"
+                            )
 
-    # --------------------------------------------------------
-    # URL
-    # --------------------------------------------------------
+                            st.session_state.show_knowledge_upload = False
 
-    elif source_type == "URL":
+                            st.rerun()
 
-        url = st.text_input(
-            "Website URL",
-            placeholder="https://example.com",
-        )
+                        except Exception as e:
 
-        if st.button(
-            "Upload URL",
-            type="primary",
-        ):
+                            st.error(
+                                f"Upload failed. ({e})"
+                            )
 
-            if not url.strip():
 
-                st.warning(
-                    "Please enter a URL first."
+            # ------------------------------------------------
+            # URL
+            # ------------------------------------------------
+
+            elif source_type == "URL":
+
+                url = st.text_input(
+                    "Website URL",
+                    placeholder="https://example.com",
                 )
 
-            else:
+                if st.button(
+                    "Upload URL",
+                    type="primary",
+                ):
 
-                try:
+                    if not url.strip():
 
-                    api_client.upload_knowledge_url(
-                        url
-                    )
+                        st.warning(
+                            "Please enter a URL first."
+                        )
 
-                    st.success(
-                        "URL uploaded successfully!"
-                    )
+                    else:
 
-                    st.rerun()
+                        try:
 
-                except Exception as e:
+                            api_client.upload_knowledge_url(
+                                url
+                            )
 
-                    st.error(
-                        f"Upload failed. ({e})"
-                    )
+                            st.success(
+                                "URL uploaded successfully!"
+                            )
+
+                            st.session_state.show_knowledge_upload = False
+
+                            st.rerun()
+
+                        except Exception as e:
+
+                            st.error(
+                                f"Upload failed. ({e})"
+                            )
 
 
     # --------------------------------------------------------
@@ -1119,11 +1174,8 @@ else:
 
     if documents:
 
-        st.divider()
-
-        st.write(
-            "**Existing knowledge sources**"
-        )
+        st.write("")
+        st.write("**Existing sources**")
 
         for doc in documents:
 
@@ -1149,33 +1201,81 @@ else:
                 )
             )
 
-            with st.expander(
-                f"📄 {source_type} · {processing_status}"
+            with st.container(
+                border=True
             ):
 
-                st.caption(
-                    source_path
+                col1, col2, col3 = st.columns(
+                    [3.5, 2, 1]
                 )
 
-                if st.button(
-                    "🗑️ Delete Source",
-                    key=f"delete_kb_{knowledge_id}",
-                ):
+                with col1:
 
-                    try:
+                    st.write(
+                        f"📄 **{source_type}**"
+                    )
 
-                        api_client.delete_knowledge(
-                            knowledge_id
+                    if source_path != "Not provided":
+
+                        st.caption(
+                            source_path
                         )
+
+                with col2:
+
+                    if str(processing_status).lower() in [
+                        "completed",
+                        "processed",
+                        "success",
+                    ]:
 
                         st.success(
-                            "Knowledge source deleted."
+                            "✓ Completed"
                         )
 
-                        st.rerun()
-
-                    except Exception as e:
+                    elif str(processing_status).lower() in [
+                        "failed",
+                        "error",
+                    ]:
 
                         st.error(
-                            f"Delete failed. ({e})"
+                            "✕ Failed"
                         )
+
+                    else:
+
+                        st.info(
+                            processing_status
+                        )
+
+                with col3:
+
+                    if st.button(
+                        "🗑️",
+                        key=f"delete_kb_{knowledge_id}",
+                        help="Delete this knowledge source",
+                    ):
+
+                        try:
+
+                            api_client.delete_knowledge(
+                                knowledge_id
+                            )
+
+                            st.success(
+                                "Source deleted."
+                            )
+
+                            st.rerun()
+
+                        except Exception as e:
+
+                            st.error(
+                                f"Delete failed. ({e})"
+                            )
+
+    else:
+
+        st.info(
+            "No knowledge sources added yet."
+        )
