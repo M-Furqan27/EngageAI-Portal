@@ -2,15 +2,6 @@ import streamlit as st
 
 st.set_page_config(page_title="AI Chatbot Platform", page_icon="🟠", layout="wide")
 
-# Streamlit ki auto-generated sidebar page-list hide karo —
-# pages navigation dict mein rehte hain (switch_page ke liye zaroori),
-# bas unki auto-list sidebar mein render nahi hogi. Navigation sirf
-# buttons/code se (st.switch_page) control hoga.
-st.markdown(
-    "<style>[data-testid='stSidebarNav'] {display: none;}</style>",
-    unsafe_allow_html=True,
-)
-
 if "token" not in st.session_state:
     st.session_state.token = None
     st.session_state.user = None
