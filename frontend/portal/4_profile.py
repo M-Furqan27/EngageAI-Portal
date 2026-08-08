@@ -17,20 +17,9 @@ st.set_page_config(
     layout="wide",
 )
 
-
-# ============================================================
-# GLOBAL THEME
-# ============================================================
-
 inject_custom_css()
 
-
-# ============================================================
-# AUTH
-# ============================================================
-
 require_login()
-
 render_account_sidebar()
 
 
@@ -84,11 +73,6 @@ COUNTRIES = [
     "Other",
 ]
 
-
-# ============================================================
-# API CONFIG
-# ============================================================
-
 API_BASE_URL = st.secrets.get(
     "API_BASE_URL",
     "https://engageai-portal.onrender.com",
@@ -102,20 +86,78 @@ REQUEST_TIMEOUT = 120
 # ============================================================
 
 try:
-
     org = api_client.get_organization_profile()
 
 except Exception as e:
-
     st.error(
         f"Organization profile load nahi ho saka. ({e})"
     )
-
     st.stop()
 
 
 # ============================================================
-# HEADER
+# HELPER FUNCTIONS
+# ============================================================
+
+def display_value(value, fallback="Not provided"):
+    """
+    Safely display profile values.
+    """
+    if value is None:
+        return fallback
+
+    value = str(value).strip()
+
+    if not value:
+        return fallback
+
+    return value
+
+
+def fetch_representatives():
+
+    try:
+        response = requests.get(
+            f"{API_BASE_URL}/representatives",
+            timeout=REQUEST_TIMEOUT,
+        )
+
+        response.raise_for_status()
+
+        return response.json()
+
+    except Exception as e:
+
+        st.error(
+            f"Representatives load nahi ho sake. ({e})"
+        )
+
+        return []
+
+
+def check_calendar_status(representative_id):
+
+    try:
+
+        response = requests.get(
+            f"{API_BASE_URL}/representatives/"
+            f"{representative_id}/calendar/check",
+            timeout=REQUEST_TIMEOUT,
+        )
+
+        response.raise_for_status()
+
+        return response.json()
+
+    except Exception:
+
+        return {
+            "connection_status": "Unknown"
+        }
+
+
+# ============================================================
+# PAGE HEADER
 # ============================================================
 
 st.title("👤 Profile")
@@ -126,24 +168,22 @@ st.caption(
 
 
 # ============================================================
-# PROFILE CONTROLS
+# EDIT BUTTON
 # ============================================================
 
 if not st.session_state.profile_edit_mode:
 
-    col1, col2, col3 = st.columns([5, 1.5, 1.5])
+    header_col1, header_col2 = st.columns(
+        [5, 1.4]
+    )
 
-    with col1:
+    with header_col1:
 
-        st.markdown(
-            "### Organization Profile"
+        st.write(
+            "Your business profile and workspace information."
         )
 
-        st.caption(
-            "View your current business configuration."
-        )
-
-    with col3:
+    with header_col2:
 
         if st.button(
             "✏️ Edit Profile",
@@ -157,22 +197,21 @@ if not st.session_state.profile_edit_mode:
 
 else:
 
-    col1, col2, col3 = st.columns([5, 1.5, 1.5])
+    header_col1, header_col2 = st.columns(
+        [5, 1.4]
+    )
 
-    with col1:
+    with header_col1:
 
-        st.markdown(
-            "### Edit Profile"
+        st.info(
+            "Edit mode is active. You can update your business "
+            "information and manage representatives and knowledge sources."
         )
 
-        st.caption(
-            "Update your organization information and manage resources."
-        )
-
-    with col3:
+    with header_col2:
 
         if st.button(
-            "Cancel",
+            "✕ Cancel",
             use_container_width=True,
         ):
 
@@ -182,7 +221,7 @@ else:
 
 
 # ============================================================
-# ORGANIZATION PROFILE
+# ORGANIZATION
 # ============================================================
 
 st.divider()
@@ -190,120 +229,108 @@ st.divider()
 st.subheader("🏢 Organization")
 
 st.caption(
-    "Your business information used across the EngageAI portal."
+    "Your business information used across EngageAI."
 )
 
+
+# ============================================================
+# VIEW MODE
+# ============================================================
 
 if not st.session_state.profile_edit_mode:
 
     # --------------------------------------------------------
-    # VIEW MODE
+    # MAIN ORGANIZATION CARD
     # --------------------------------------------------------
 
-    col1, col2 = st.columns(2)
+    with st.container(border=True):
 
-    with col1:
-
-        st.metric(
-            "Organization",
-            org.get(
-                "organization_name",
-                "-"
-            ),
+        st.markdown(
+            f"### {display_value(org.get('organization_name'))}"
         )
 
-        st.write("**Business type**")
-
-        st.write(
-            org.get(
-                "business_type",
-                "-"
-            )
-        )
-
-        st.write("**Website**")
-
-        website = org.get(
-            "website",
-            "",
-        )
-
-        if website:
-            st.write(website)
-        else:
-            st.caption("Not provided")
-
-        st.write("**Business email**")
-
-        business_email = org.get(
-            "business_email",
-            "",
-        )
-
-        if business_email:
-            st.write(business_email)
-        else:
-            st.caption("Not provided")
-
-    with col2:
-
-        st.write("**Business phone**")
-
-        business_phone = org.get(
-            "business_phone",
-            "",
-        )
-
-        if business_phone:
-            st.write(business_phone)
-        else:
-            st.caption("Not provided")
-
-        st.write("**Country**")
-
-        st.write(
-            org.get(
-                "country",
-                "-"
-            )
-        )
-
-        st.write("**Address**")
-
-        address = org.get(
-            "address",
-            "",
-        )
-
-        if address:
-            st.write(address)
-        else:
-            st.caption("Not provided")
-
-    st.write("**Business description**")
-
-    description = org.get(
-        "description",
-        "",
-    )
-
-    if description:
-        st.write(description)
-    else:
         st.caption(
-            "No business description added yet."
+            display_value(
+                org.get("business_type")
+            )
         )
 
+        st.divider()
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+
+            st.write("🌐 **Website**")
+
+            website = display_value(
+                org.get("website")
+            )
+
+            if website != "Not provided":
+                st.write(website)
+            else:
+                st.caption(website)
+
+            st.write("📧 **Business email**")
+
+            business_email = display_value(
+                org.get("business_email")
+            )
+
+            if business_email != "Not provided":
+                st.write(business_email)
+            else:
+                st.caption(business_email)
+
+        with col2:
+
+            st.write("📞 **Business phone**")
+
+            st.write(
+                display_value(
+                    org.get("business_phone")
+                )
+            )
+
+            st.write("🌍 **Country**")
+
+            st.write(
+                display_value(
+                    org.get("country")
+                )
+            )
+
+        st.write("📍 **Address**")
+
+        st.write(
+            display_value(
+                org.get("address")
+            )
+        )
+
+        st.write("📝 **Business description**")
+
+        st.write(
+            display_value(
+                org.get("description")
+            )
+        )
+
+
+# ============================================================
+# EDIT MODE
+# ============================================================
 
 else:
-
-    # --------------------------------------------------------
-    # EDIT MODE
-    # --------------------------------------------------------
 
     with st.form(
         "profile_organization_form"
     ):
+
+        st.write(
+            "**Organization information**"
+        )
 
         organization_name = st.text_input(
             "Organization name",
@@ -312,10 +339,13 @@ else:
                 "",
             ),
             disabled=True,
-            help="Organization name is managed during onboarding.",
+            help=(
+                "Organization name is managed during "
+                "initial setup."
+            ),
         )
 
-        business_type_current = org.get(
+        current_business_type = org.get(
             "business_type",
             "Other",
         )
@@ -325,56 +355,62 @@ else:
             BUSINESS_TYPES,
             index=(
                 BUSINESS_TYPES.index(
-                    business_type_current
+                    current_business_type
                 )
-                if business_type_current in BUSINESS_TYPES
+                if current_business_type in BUSINESS_TYPES
                 else 0
             ),
         )
 
-        website = st.text_input(
-            "Website",
-            value=org.get(
-                "website",
-                "",
-            ),
-            placeholder="https://example.com",
-        )
+        col1, col2 = st.columns(2)
 
-        business_email = st.text_input(
-            "Business email",
-            value=org.get(
-                "business_email",
-                "",
-            ),
-            placeholder="contact@company.com",
-        )
+        with col1:
 
-        business_phone = st.text_input(
-            "Business phone",
-            value=org.get(
-                "business_phone",
-                "",
-            ),
-            placeholder="+92 300 1234567",
-        )
+            website = st.text_input(
+                "Website",
+                value=org.get(
+                    "website",
+                    "",
+                ),
+                placeholder="https://example.com",
+            )
 
-        current_country = org.get(
-            "country",
-            "Pakistan",
-        )
+            business_email = st.text_input(
+                "Business email",
+                value=org.get(
+                    "business_email",
+                    "",
+                ),
+                placeholder="contact@company.com",
+            )
 
-        country = st.selectbox(
-            "Country *",
-            COUNTRIES,
-            index=(
-                COUNTRIES.index(
-                    current_country
-                )
-                if current_country in COUNTRIES
-                else 0
-            ),
-        )
+        with col2:
+
+            business_phone = st.text_input(
+                "Business phone",
+                value=org.get(
+                    "business_phone",
+                    "",
+                ),
+                placeholder="+92 300 1234567",
+            )
+
+            current_country = org.get(
+                "country",
+                "Pakistan",
+            )
+
+            country = st.selectbox(
+                "Country *",
+                COUNTRIES,
+                index=(
+                    COUNTRIES.index(
+                        current_country
+                    )
+                    if current_country in COUNTRIES
+                    else 0
+                ),
+            )
 
         address = st.text_area(
             "Address",
@@ -382,7 +418,6 @@ else:
                 "address",
                 "",
             ),
-            placeholder="Business address",
         )
 
         description = st.text_area(
@@ -391,21 +426,15 @@ else:
                 "description",
                 "",
             ),
-            placeholder="Tell customers about your business...",
+            height=140,
         )
 
-        st.write("")
-
         save_org = st.form_submit_button(
-            "Save Organization",
+            "💾 Save Organization",
             type="primary",
             use_container_width=True,
         )
 
-
-    # --------------------------------------------------------
-    # SAVE ORGANIZATION
-    # --------------------------------------------------------
 
     if save_org:
 
@@ -446,206 +475,237 @@ else:
 
 st.divider()
 
-st.subheader("🧑‍💼 Representatives")
+st.subheader("👥 Representatives")
 
 st.caption(
-    "Manage the people who represent your business and their calendar connections."
+    "People who represent your business and handle services."
 )
-
-
-# ============================================================
-# FETCH REPRESENTATIVES
-# ============================================================
-
-def fetch_representatives():
-
-    try:
-
-        response = requests.get(
-            f"{API_BASE_URL}/representatives",
-            timeout=REQUEST_TIMEOUT,
-        )
-
-        response.raise_for_status()
-
-        return response.json()
-
-    except Exception as e:
-
-        st.error(
-            f"Representatives load nahi ho sake. ({e})"
-        )
-
-        return []
-
-
-# ============================================================
-# CALENDAR STATUS
-# ============================================================
-
-def check_calendar_status(
-    representative_id,
-):
-
-    try:
-
-        response = requests.get(
-            f"{API_BASE_URL}/representatives/"
-            f"{representative_id}/calendar/check",
-            timeout=REQUEST_TIMEOUT,
-        )
-
-        response.raise_for_status()
-
-        return response.json()
-
-    except Exception:
-
-        return {
-            "connection_status": "Unknown"
-        }
 
 
 representatives = fetch_representatives()
 
 
 # ============================================================
-# REPRESENTATIVE LIST
+# REPRESENTATIVES — VIEW
 # ============================================================
 
-if not representatives:
+if not st.session_state.profile_edit_mode:
 
-    st.info(
-        "No representatives have been added yet."
-    )
+    if not representatives:
+
+        st.info(
+            "No representatives have been added yet."
+        )
+
+    else:
+
+        st.caption(
+            f"{len(representatives)} representative(s)"
+        )
+
+        # Two-column cards
+        for start in range(
+            0,
+            len(representatives),
+            2,
+        ):
+
+            row = representatives[
+                start:start + 2
+            ]
+
+            columns = st.columns(
+                len(row)
+            )
+
+            for column, representative in zip(
+                columns,
+                row,
+            ):
+
+                with column:
+
+                    representative_id = representative.get(
+                        "representative_id"
+                    )
+
+                    name = display_value(
+                        representative.get(
+                            "representative_name"
+                        )
+                    )
+
+                    service = display_value(
+                        representative.get(
+                            "service"
+                        )
+                    )
+
+                    email = display_value(
+                        representative.get(
+                            "company_email"
+                        )
+                    )
+
+                    invitation = display_value(
+                        representative.get(
+                            "invitation_status",
+                            "Pending",
+                        )
+                    )
+
+                    calendar = check_calendar_status(
+                        representative_id
+                    )
+
+                    calendar_status = calendar.get(
+                        "connection_status",
+                        "Unknown",
+                    )
+
+                    with st.container(
+                        border=True
+                    ):
+
+                        st.markdown(
+                            f"### 👤 {name}"
+                        )
+
+                        st.caption(
+                            service
+                        )
+
+                        st.write(
+                            f"📧 {email}"
+                        )
+
+                        st.divider()
+
+                        if str(invitation).lower() in [
+                            "accepted",
+                            "active",
+                            "approved",
+                        ]:
+
+                            st.success(
+                                f"Invitation · {invitation}"
+                            )
+
+                        else:
+
+                            st.warning(
+                                f"Invitation · {invitation}"
+                            )
+
+                        if calendar_status == "Connected":
+
+                            st.success(
+                                "🟢 Calendar connected"
+                            )
+
+                        elif calendar_status == "Unknown":
+
+                            st.warning(
+                                "⚪ Calendar status unknown"
+                            )
+
+                        else:
+
+                            st.warning(
+                                "🟡 Calendar not connected"
+                            )
+
+                        st.caption(
+                            display_value(
+                                representative.get(
+                                    "service_description"
+                                )
+                            )
+                        )
+
+
+# ============================================================
+# REPRESENTATIVES — EDIT MODE
+# ============================================================
 
 else:
 
-    for representative in representatives:
+    if representatives:
 
-        representative_id = representative.get(
-            "representative_id"
-        )
+        for representative in representatives:
 
-        representative_name = representative.get(
-            "representative_name",
-            "-",
-        )
-
-        service = representative.get(
-            "service",
-            "-",
-        )
-
-        company_email = representative.get(
-            "company_email",
-            "-",
-        )
-
-        service_description = representative.get(
-            "service_description",
-            "-",
-        )
-
-        invitation_status = representative.get(
-            "invitation_status",
-            "Pending",
-        )
-
-        calendar_status = check_calendar_status(
-            representative_id
-        )
-
-        connection_status = calendar_status.get(
-            "connection_status",
-            "Unknown",
-        )
-
-        # ----------------------------------------------------
-        # CARD
-        # ----------------------------------------------------
-
-        with st.container(
-            border=True
-        ):
-
-            st.markdown(
-                f"### 👤 {representative_name}"
+            representative_id = representative.get(
+                "representative_id"
             )
 
-            st.caption(
-                service
+            name = display_value(
+                representative.get(
+                    "representative_name"
+                )
             )
 
-            col1, col2 = st.columns(2)
-
-            with col1:
-
-                st.write(
-                    "**Company email**"
+            service = display_value(
+                representative.get(
+                    "service"
                 )
+            )
 
-                st.write(
-                    company_email
+            email = display_value(
+                representative.get(
+                    "company_email"
                 )
+            )
 
-                st.write(
-                    "**Service description**"
+            invitation = display_value(
+                representative.get(
+                    "invitation_status",
+                    "Pending",
                 )
+            )
 
-                st.write(
-                    service_description
-                )
+            calendar = check_calendar_status(
+                representative_id
+            )
 
-            with col2:
+            calendar_status = calendar.get(
+                "connection_status",
+                "Unknown",
+            )
 
-                st.write(
-                    "**Invitation**"
-                )
+            with st.expander(
+                f"👤 {name} · {service}",
+                expanded=True,
+            ):
 
-                if str(invitation_status).lower() in [
-                    "accepted",
-                    "active",
-                    "approved",
-                ]:
+                col1, col2 = st.columns(2)
 
-                    st.success(
-                        str(invitation_status)
+                with col1:
+
+                    st.write(
+                        f"**Company email:** {email}"
                     )
 
-                else:
-
-                    st.warning(
-                        str(invitation_status)
+                    st.write(
+                        "**Service description:**"
                     )
 
-                st.write(
-                    "**Calendar**"
-                )
-
-                if connection_status == "Connected":
-
-                    st.success(
-                        "Connected"
+                    st.write(
+                        display_value(
+                            representative.get(
+                                "service_description"
+                            )
+                        )
                     )
 
-                elif connection_status == "Unknown":
+                with col2:
 
-                    st.warning(
-                        "Unknown"
+                    st.write(
+                        f"**Invitation:** {invitation}"
                     )
 
-                else:
-
-                    st.warning(
-                        "Not Connected"
+                    st.write(
+                        f"**Calendar:** {calendar_status}"
                     )
-
-            # ------------------------------------------------
-            # DELETE
-            # ------------------------------------------------
-
-            if st.session_state.profile_edit_mode:
 
                 st.divider()
 
@@ -661,7 +721,7 @@ else:
                         )
 
                         st.success(
-                            "Representative deleted successfully."
+                            "Representative deleted."
                         )
 
                         st.rerun()
@@ -672,9 +732,15 @@ else:
                             f"Delete failed. ({e})"
                         )
 
+    else:
+
+        st.info(
+            "No representatives added yet."
+        )
+
 
 # ============================================================
-# ADD REPRESENTATIVE
+# ADD REPRESENTATIVE — EDIT MODE
 # ============================================================
 
 if st.session_state.profile_edit_mode:
@@ -685,89 +751,96 @@ if st.session_state.profile_edit_mode:
         "➕ Add Representative"
     )
 
-    st.caption(
-        "Add a new person who can represent your business."
-    )
-
-    with st.form(
-        "profile_add_rep_form"
+    with st.expander(
+        "Add a new representative",
+        expanded=False,
     ):
 
-        representative_name = st.text_input(
-            "Representative name *",
-            placeholder="e.g. Ahmed Khan",
-        )
+        with st.form(
+            "profile_add_rep_form"
+        ):
 
-        service = st.text_input(
-            "Service *",
-            placeholder="e.g. Sales",
-        )
-
-        service_description = st.text_area(
-            "Service description",
-            placeholder="Describe the service handled by this representative.",
-        )
-
-        company_email = st.text_input(
-            "Company email *",
-            placeholder="representative@company.com",
-        )
-
-        add_rep = st.form_submit_button(
-            "Add Representative",
-            type="primary",
-            use_container_width=True,
-        )
-
-    if add_rep:
-
-        if not representative_name.strip():
-
-            st.error(
-                "Representative name is required."
+            representative_name = st.text_input(
+                "Representative name *",
+                placeholder="e.g. Ahmed Khan",
             )
 
-        elif not service.strip():
-
-            st.error(
-                "Service is required."
+            service = st.text_input(
+                "Service *",
+                placeholder="e.g. Sales",
             )
 
-        elif not company_email.strip():
-
-            st.error(
-                "Company email is required."
+            company_email = st.text_input(
+                "Company email *",
+                placeholder="representative@company.com",
             )
 
-        else:
-
-            payload = {
-                "organization_id": org.get(
-                    "organization_id"
+            service_description = st.text_area(
+                "Service description",
+                placeholder=(
+                    "Describe the service handled by this representative."
                 ),
-                "representative_name": representative_name,
-                "service": service,
-                "service_description": service_description,
-                "company_email": company_email,
-            }
+            )
 
-            try:
+            add_rep = st.form_submit_button(
+                "Add Representative",
+                type="primary",
+                use_container_width=True,
+            )
 
-                api_client.create_representative(
-                    payload
-                )
+        if add_rep:
 
-                st.success(
-                    "Representative added successfully!"
-                )
-
-                st.rerun()
-
-            except Exception as e:
+            if not representative_name.strip():
 
                 st.error(
-                    f"Representative add failed. ({e})"
+                    "Representative name is required."
                 )
+
+            elif not service.strip():
+
+                st.error(
+                    "Service is required."
+                )
+
+            elif not company_email.strip():
+
+                st.error(
+                    "Company email is required."
+                )
+
+            else:
+
+                payload = {
+                    "organization_id": org.get(
+                        "organization_id"
+                    ),
+                    "representative_name":
+                        representative_name,
+                    "service":
+                        service,
+                    "service_description":
+                        service_description,
+                    "company_email":
+                        company_email,
+                }
+
+                try:
+
+                    api_client.create_representative(
+                        payload
+                    )
+
+                    st.success(
+                        "Representative added successfully!"
+                    )
+
+                    st.rerun()
+
+                except Exception as e:
+
+                    st.error(
+                        f"Add representative failed. ({e})"
+                    )
 
 
 # ============================================================
@@ -779,15 +852,125 @@ st.divider()
 st.subheader("📚 Knowledge Base")
 
 st.caption(
-    "Teach EngageAI about your business using text, documents, and URLs."
+    "Business information used by your AI assistant."
 )
 
 
 # ============================================================
-# UPLOAD — EDIT MODE ONLY
+# LOAD KNOWLEDGE
 # ============================================================
 
-if st.session_state.profile_edit_mode:
+try:
+
+    documents = api_client.list_knowledge()
+
+except Exception as e:
+
+    documents = []
+
+    st.error(
+        f"Knowledge sources load nahi ho sake. ({e})"
+    )
+
+
+# ============================================================
+# KNOWLEDGE — VIEW MODE
+# ============================================================
+
+if not st.session_state.profile_edit_mode:
+
+    if not documents:
+
+        st.info(
+            "No knowledge sources have been added yet."
+        )
+
+    else:
+
+        st.caption(
+            f"{len(documents)} source(s) added"
+        )
+
+        for doc in documents:
+
+            source_type = display_value(
+                doc.get(
+                    "source_type",
+                    "Unknown",
+                )
+            )
+
+            processing_status = display_value(
+                doc.get(
+                    "processing_status",
+                    "Unknown",
+                )
+            )
+
+            source_path = display_value(
+                doc.get(
+                    "source_path",
+                    ""
+                )
+            )
+
+            with st.container(
+                border=True
+            ):
+
+                col1, col2 = st.columns(
+                    [4, 1]
+                )
+
+                with col1:
+
+                    st.markdown(
+                        f"### 📄 {source_type}"
+                    )
+
+                    if source_path != "Not provided":
+
+                        st.caption(
+                            source_path
+                        )
+
+                with col2:
+
+                    if str(processing_status).lower() in [
+                        "completed",
+                        "processed",
+                        "success",
+                    ]:
+
+                        st.success(
+                            "✓ Completed"
+                        )
+
+                    elif str(processing_status).lower() in [
+                        "failed",
+                        "error",
+                    ]:
+
+                        st.error(
+                            "✕ Failed"
+                        )
+
+                    else:
+
+                        st.info(
+                            processing_status
+                        )
+
+
+# ============================================================
+# KNOWLEDGE — EDIT MODE
+# ============================================================
+
+else:
+
+    st.info(
+        "Edit mode: add or remove knowledge sources below."
+    )
 
     source_type = st.radio(
         "Source type",
@@ -808,8 +991,8 @@ if st.session_state.profile_edit_mode:
         text_content = st.text_area(
             "Content",
             placeholder=(
-                "Paste information about your business, "
-                "services, pricing, policies, FAQs, etc."
+                "Paste business information, FAQs, "
+                "services, pricing, policies, etc."
             ),
             height=180,
         )
@@ -842,7 +1025,7 @@ if st.session_state.profile_edit_mode:
                 except Exception as e:
 
                     st.error(
-                        f"Text upload failed. ({e})"
+                        f"Upload failed. ({e})"
                     )
 
     # --------------------------------------------------------
@@ -884,7 +1067,7 @@ if st.session_state.profile_edit_mode:
                 except Exception as e:
 
                     st.error(
-                        f"PDF upload failed. ({e})"
+                        f"Upload failed. ({e})"
                     )
 
     # --------------------------------------------------------
@@ -906,7 +1089,7 @@ if st.session_state.profile_edit_mode:
             if not url.strip():
 
                 st.warning(
-                    "Please enter a website URL."
+                    "Please enter a URL first."
                 )
 
             else:
@@ -926,135 +1109,73 @@ if st.session_state.profile_edit_mode:
                 except Exception as e:
 
                     st.error(
-                        f"URL upload failed. ({e})"
+                        f"Upload failed. ({e})"
                     )
 
 
-# ============================================================
-# EXISTING KNOWLEDGE SOURCES
-# ============================================================
+    # --------------------------------------------------------
+    # EXISTING SOURCES
+    # --------------------------------------------------------
 
-st.divider()
+    if documents:
 
-st.subheader(
-    "Knowledge Sources"
-)
+        st.divider()
 
-
-try:
-
-    documents = api_client.list_knowledge()
-
-except Exception as e:
-
-    documents = []
-
-    st.error(
-        f"Knowledge sources load nahi ho sake. ({e})"
-    )
-
-
-if documents:
-
-    st.caption(
-        f"{len(documents)} source(s) added"
-    )
-
-    for doc in documents:
-
-        knowledge_id = doc.get(
-            "knowledge_base_id"
+        st.write(
+            "**Existing knowledge sources**"
         )
 
-        source_type = doc.get(
-            "source_type",
-            "Unknown",
-        )
+        for doc in documents:
 
-        processing_status = doc.get(
-            "processing_status",
-            "Unknown",
-        )
-
-        source_path = doc.get(
-            "source_path",
-            "",
-        )
-
-        with st.container(
-            border=True
-        ):
-
-            col1, col2 = st.columns(
-                [5, 1]
+            knowledge_id = doc.get(
+                "knowledge_base_id"
             )
 
-            with col1:
+            source_type = display_value(
+                doc.get(
+                    "source_type"
+                )
+            )
 
-                st.write(
-                    f"**{source_type}**"
+            processing_status = display_value(
+                doc.get(
+                    "processing_status"
+                )
+            )
+
+            source_path = display_value(
+                doc.get(
+                    "source_path"
+                )
+            )
+
+            with st.expander(
+                f"📄 {source_type} · {processing_status}"
+            ):
+
+                st.caption(
+                    source_path
                 )
 
-                if str(processing_status).lower() in [
-                    "completed",
-                    "processed",
-                    "success",
-                ]:
+                if st.button(
+                    "🗑️ Delete Source",
+                    key=f"delete_kb_{knowledge_id}",
+                ):
 
-                    st.success(
-                        str(processing_status)
-                    )
+                    try:
 
-                elif str(processing_status).lower() in [
-                    "failed",
-                    "error",
-                ]:
+                        api_client.delete_knowledge(
+                            knowledge_id
+                        )
 
-                    st.error(
-                        str(processing_status)
-                    )
+                        st.success(
+                            "Knowledge source deleted."
+                        )
 
-                else:
+                        st.rerun()
 
-                    st.info(
-                        str(processing_status)
-                    )
+                    except Exception as e:
 
-                if source_path:
-
-                    st.caption(
-                        source_path
-                    )
-
-            with col2:
-
-                if st.session_state.profile_edit_mode:
-
-                    if st.button(
-                        "🗑️ Delete",
-                        key=f"delete_kb_{knowledge_id}",
-                    ):
-
-                        try:
-
-                            api_client.delete_knowledge(
-                                knowledge_id
-                            )
-
-                            st.success(
-                                "Knowledge source deleted."
-                            )
-
-                            st.rerun()
-
-                        except Exception as e:
-
-                            st.error(
-                                f"Delete failed. ({e})"
-                            )
-
-else:
-
-    st.info(
-        "No knowledge sources added yet."
-    )
+                        st.error(
+                            f"Delete failed. ({e})"
+                        )
