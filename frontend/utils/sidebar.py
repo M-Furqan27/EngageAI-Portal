@@ -3,76 +3,72 @@ import streamlit as st
 
 def render_account_sidebar():
     """
-    Render the authenticated user's account information
-    and logout control in the Streamlit sidebar.
+    Minimal professional EngageAI sidebar.
+    Navigation is handled by Streamlit's navigation system.
     """
 
     user = st.session_state.get("user") or {}
 
     first_name = user.get("first_name", "")
     last_name = user.get("last_name", "")
-    email = user.get("email", "")
 
-    name = f"{first_name} {last_name}".strip()
+    name = f"{first_name} {last_name}".strip() or "User"
 
-    if not name:
-        name = "Account"
+    role = user.get("role", "Owner")
 
     # ========================================================
-    # ENGAGEAI BRAND
+    # SIDEBAR
     # ========================================================
 
-    st.sidebar.title("✨ EngageAI")
+    with st.sidebar:
 
-    st.sidebar.caption(
-        "Business Portal"
-    )
+        # ----------------------------------------------------
+        # BRAND
+        # ----------------------------------------------------
 
-    st.sidebar.divider()
+        st.markdown(
+            "## ✨ EngageAI"
+        )
 
-    # ========================================================
-    # WORKSPACE
-    # ========================================================
+        st.markdown(
+            "<div style='height:0.5rem'></div>",
+            unsafe_allow_html=True,
+        )
 
-    st.sidebar.subheader("Workspace")
+        # ----------------------------------------------------
+        # ACCOUNT AREA
+        # ----------------------------------------------------
 
-    st.sidebar.caption(
-        "Use the navigation menu above to move between portal sections."
-    )
+        st.markdown(
+            "<div style='height:8rem'></div>",
+            unsafe_allow_html=True,
+        )
 
-    st.sidebar.divider()
+        st.divider()
 
-    # ========================================================
-    # ACCOUNT
-    # ========================================================
+        # ----------------------------------------------------
+        # USER
+        # ----------------------------------------------------
 
-    st.sidebar.subheader("Account")
+        st.markdown(
+            f"👤 **{name}**"
+        )
 
-    st.sidebar.write(
-        f"👤 **{name}**"
-    )
+        st.caption(
+            role.title()
+        )
 
-    if email:
-        st.sidebar.caption(email)
+        # ----------------------------------------------------
+        # LOGOUT
+        # ----------------------------------------------------
 
-    st.sidebar.success(
-        "Account active"
-    )
+        if st.button(
+            "🚪  Log out",
+            use_container_width=True,
+            key="sidebar_logout",
+        ):
+            st.session_state.token = None
+            st.session_state.user = None
+            st.session_state.onboarding_completed = False
 
-    # ========================================================
-    # LOGOUT
-    # ========================================================
-
-    st.sidebar.divider()
-
-    if st.sidebar.button(
-        "🚪 Log out",
-        use_container_width=True,
-        key="sidebar_logout",
-    ):
-
-        st.session_state.token = None
-        st.session_state.user = None
-        st.session_state.onboarding_completed = False
-
-        st.rerun()
+            st.rerun()
