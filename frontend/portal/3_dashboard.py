@@ -2,18 +2,13 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 from utils import api_client
+from utils.sidebar import render_account_sidebar
 
 if "token" not in st.session_state or st.session_state.token is None:
     st.warning("Pehle login karein.")
     st.stop()
 
-with st.sidebar:
-    st.divider()
-    if st.button("🚪 Log out", use_container_width=True):
-        st.session_state.token = None
-        st.session_state.user = None
-        st.session_state.onboarding_completed = False
-        st.rerun()
+render_account_sidebar()
 
 st.title("📊 Dashboard")
 st.caption(f"Welcome, {st.session_state.user.get('first_name', '')}")
@@ -26,12 +21,14 @@ except Exception as e:
     st.stop()
 
 # ---------------- top metric cards ----------------
-c1, c2, c3, c4 = st.columns(4)
+c1, c2, c3, c4, c5 = st.columns(5)
 
 c1.metric("Total Leads", summary["total_leads"])
 c2.metric("Active Employees", summary["active_employees"])
 c3.metric("Inactive Employees", summary["inactive_employees"])
 c4.metric("Knowledge Sources", summary["total_knowledge_sources"])
+c5.metric("Representatives", summary["total_representatives"])
+st.caption(f"👥 {summary['active_representatives']} active representative(s) out of {summary['total_representatives']}")
 
 st.divider()
 

@@ -93,6 +93,7 @@
 import streamlit as st
 import requests
 from utils import api_client
+from utils.sidebar import render_account_sidebar
 
 
 st.set_page_config(
@@ -109,6 +110,8 @@ st.set_page_config(
 if "token" not in st.session_state or st.session_state.token is None:
     st.warning("Pehle login karein.")
     st.stop()
+
+render_account_sidebar()
 
 
 
