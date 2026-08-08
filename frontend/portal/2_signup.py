@@ -169,45 +169,32 @@ CODE_LABELS = [
     for code, country in COUNTRY_CODES
 ]
 
-
 # ============================================================
 # BRAND
 # ============================================================
 
-st.markdown(
-    """
-    <div class="signup-brand">
-        <div class="signup-brand-title">
-            ✨ EngageAI
-        </div>
+st.markdown("## ✨ EngageAI")
 
-        <div class="signup-brand-subtitle">
-            Intelligent business communication
-        </div>
-    </div>
-    """,
-    unsafe_allow_html=True,
+st.caption(
+    "Intelligent business communication"
 )
+
+st.write("")
 
 
 # ============================================================
 # HEADER
 # ============================================================
 
-st.markdown(
-    """
-    <div class="signup-heading">
-        <h1>Create your account</h1>
+st.title("Create your account")
 
-        <p>
-            Set up your business workspace in a few simple steps.
-            You can complete the remaining business details
-            after your first login.
-        </p>
-    </div>
-    """,
-    unsafe_allow_html=True,
+st.caption(
+    "Set up your business workspace in a few simple steps. "
+    "You can complete the remaining business details "
+    "after your first login."
 )
+
+st.divider()
 
 
 # ============================================================
