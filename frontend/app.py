@@ -2,13 +2,20 @@ import streamlit as st
 
 st.set_page_config(page_title="AI Chatbot Platform", page_icon="🟠", layout="wide")
 
+# Streamlit ki auto-generated sidebar page-list hide karo —
+# pages navigation dict mein rehte hain (switch_page ke liye zaroori),
+# bas unki auto-list sidebar mein render nahi hogi. Navigation sirf
+# buttons/code se (st.switch_page) control hoga.
+st.markdown(
+    "<style>[data-testid='stSidebarNav'] {display: none;}</style>",
+    unsafe_allow_html=True,
+)
+
 if "token" not in st.session_state:
     st.session_state.token = None
     st.session_state.user = None
 if "onboarding_completed" not in st.session_state:
     st.session_state.onboarding_completed = False
-if "nav_context" not in st.session_state:
-    st.session_state.nav_context = "home"  # "home" ya "auth" (login/signup)
 
 
 # ============================================================
@@ -26,11 +33,9 @@ def hero_section():
         c1, c2 = st.columns(2)
         with c1:
             if st.button("Get started free →", type="primary", use_container_width=True):
-                st.session_state.nav_context = "auth"
                 st.switch_page("portal/2_signup.py")
         with c2:
             if st.button("Log in", use_container_width=True):
-                st.session_state.nav_context = "auth"
                 st.switch_page("portal/1_login.py")
         st.caption("No credit card required · Live on your website in under 10 minutes")
 
@@ -103,7 +108,6 @@ def cta_section():
         _, mid, _ = st.columns([1, 1, 1])
         with mid:
             if st.button("Create your account →", type="primary", use_container_width=True):
-                st.session_state.nav_context = "auth"
                 st.switch_page("portal/2_signup.py")
 
 
@@ -111,7 +115,6 @@ def cta_section():
 # HOME PAGE
 # ============================================================
 def home_page():
-    st.session_state.nav_context = "home"
     hero_section()
     st.divider()
     sequence_section()
@@ -138,12 +141,8 @@ onboarding_done = st.session_state.onboarding_completed
 is_admin = is_logged_in and st.session_state.user and st.session_state.user.get("role") == "admin"
 
 if not is_logged_in:
-    if st.session_state.nav_context == "auth":
-        # Login ya Signup par hain — Home + Login + Signup teenon dikhein
-        nav_pages = {"": [home], "Account": [login_page, signup_page]}
-    else:
-        # Sirf Home par hain — sidebar mein sirf Home
-        nav_pages = {"": [home]}
+    # Client abhi tak login nahi — sirf marketing home + login/signup
+    nav_pages = {"": [home], "Account": [login_page, signup_page]}
 elif is_logged_in and not onboarding_done:
     # Login ho gaya lekin onboarding baaki — sirf onboarding show hoga
     nav_pages = {"Setup": [onboarding_page]}
