@@ -1,10 +1,10 @@
 """
 frontend/portal/2_signup.py
 
-REPLACE the existing file. Ab do-step wizard nahi — ek hi simple form:
-sirf Organization NAME (poori profile nahi) + Owner account.
-Baaki organization details (business type, website, phone, country, ...)
-pehli baar login karne pe onboarding wizard mein bharni hain.
+Ek hi simple form: Organization NAME + Owner account.
+Signup ke baad auto-login NAHI hota — client ko khud apne
+credentials se Login page par jaake login karna hota hai,
+tabhi Onboarding khulti hai.
 """
 
 import streamlit as st
@@ -34,7 +34,7 @@ def phone_input(label_prefix: str, key_prefix: str):
 
 
 st.title("🆕 Create your account")
-st.caption("Bas apna organization ka naam aur apna account bana lo — baaki details pehli login ke baad complete karoge.")
+st.caption("Bas apna organization ka naam aur apna account bana lo — baaki details login ke baad complete karoge.")
 
 with st.form("signup_form"):
     organization_name = st.text_input("Organization name *", placeholder="e.g. Sindh Furniture Co.")
@@ -70,14 +70,11 @@ if submitted:
             "password": password,
         }
         try:
-            data = api_client.register_organization_and_owner(payload)
-            st.session_state.token = data["token"]
-            st.session_state.user = data["user"]
-            st.session_state.onboarding_completed = False
-            st.success(f"'{organization_name}' create ho gayi! Ab apni profile complete karein.")
-            # Account already logged in hai (token mil chuka hai) — seedha
-            # onboarding par bhejna hai, dobara login ki zaroorat nahi.
-            st.rerun()
+            api_client.register_organization_and_owner(payload)
+            # Token/session set NAHI karte — signup sirf account banata
+            # hai. Client ko khud login karna hoga, tabhi onboarding khulegi.
+            st.success(f"'{organization_name}' create ho gayi! Ab login karein.")
+            st.switch_page("portal/1_login.py")
         except Exception as e:
             st.error(f"Signup fail ho gaya. ({e})")
 
