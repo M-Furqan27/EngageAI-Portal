@@ -4,12 +4,11 @@ import matplotlib.pyplot as plt
 from utils import api_client
 from utils.sidebar import render_account_sidebar
 from utils.theme import inject_custom_css
+from utils.auth import require_login
 
 inject_custom_css()
 
-if "token" not in st.session_state or st.session_state.token is None:
-    st.warning("Pehle login karein.")
-    st.stop()
+require_login()
 
 render_account_sidebar()
 

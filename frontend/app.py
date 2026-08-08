@@ -193,17 +193,31 @@ onboarding_done = st.session_state.onboarding_completed
 is_admin = is_logged_in and st.session_state.user and st.session_state.user.get("role") == "admin"
 
 if not is_logged_in:
-    # Client abhi tak login nahi — sirf marketing home + login/signup
-    nav_pages = {"": [home], "Account": [login_page, signup_page]}
+    # Client abhi tak login nahi — sidebar mein sirf Home + Login/Signup
+    # dikhte hain. Protected pages (Onboarding/Dashboard/Profile/Admin)
+    # bhi yahan ROUTING ke liye zaroor shamil hain — taake koi in mein se
+    # kisi ka direct link kholay to us page ka apna require_login() chal
+    # ke usay Login page par bhej sake (warna Streamlit us page ko route
+    # hi nahi karta, error na dikhaye, chup chap Home par le jata). Wo
+    # extra pages sidebar mein NAHI dikhte — position="hidden" poori
+    # auto-list chhupa deta hai (Home page ke apne buttons se navigate
+    # hota hai, sidebar list ki zaroorat nahi is state mein).
+    nav_pages = {
+        "": [home],
+        "Account": [login_page, signup_page],
+        "Protected": [onboarding_page, dashboard_page, profile_page, admin_page],
+    }
+    pg = st.navigation(nav_pages, position="hidden")
 elif is_logged_in and not onboarding_done:
     # Login ho gaya lekin onboarding baaki — sirf onboarding show hoga
     nav_pages = {"Setup": [onboarding_page]}
+    pg = st.navigation(nav_pages)
 else:
     # Onboarding complete — sirf dashboard + profile (+ admin agar role admin hai)
     pages = [dashboard_page, profile_page]
     if is_admin:
         pages.append(admin_page)
     nav_pages = {"Workspace": pages}
+    pg = st.navigation(nav_pages)
 
-pg = st.navigation(nav_pages)
 pg.run()

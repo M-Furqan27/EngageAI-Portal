@@ -17,6 +17,13 @@ if "token" not in st.session_state:
     st.session_state.user = None
 
 st.title("🔑 Log in")
+
+# Kisi protected page (Profile/Dashboard/Onboarding/Admin) ka direct
+# link kholne par yahan redirect hua ho to alert dikhao
+_flash = st.session_state.pop("flash_message", None)
+if _flash:
+    st.warning(f"🔒 {_flash}")
+
 st.caption("Apne organization ke dashboard mein login karein.")
 
 with st.form("login_form"):

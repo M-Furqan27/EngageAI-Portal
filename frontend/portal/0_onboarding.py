@@ -17,6 +17,7 @@ import streamlit as st
 from utils import api_client
 import requests
 from utils.theme import inject_custom_css
+from utils.auth import require_login
 
 inject_custom_css()
 
@@ -32,9 +33,7 @@ st.set_page_config(
 
 # ---------------- AUTH CHECK ----------------
 
-if "token" not in st.session_state or st.session_state.token is None:
-    st.warning("Pehle login karein.")
-    st.stop()
+require_login()
 
 
 
