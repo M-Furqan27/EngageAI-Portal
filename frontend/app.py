@@ -178,46 +178,52 @@ def home_page():
 
 
 # ============================================================
-# NAVIGATION (session state ke hisaab se pages control hote hain)
+# NAVIGATION
 # ============================================================
 home = st.Page(home_page, title="Home", icon="🏠", default=True)
-login_page = st.Page("portal/1_login.py", title="Log in", icon="🔑")
-signup_page = st.Page("portal/2_signup.py", title="Sign up", icon="🆕")
-onboarding_page = st.Page("portal/0_onboarding.py", title="Onboarding", icon="👋")
-admin_page = st.Page("admin_portal/1_profiles.py", title="Admin", icon="🛠️")
-dashboard_page = st.Page("portal/3_dashboard.py", title="Dashboard", icon="📊")
-profile_page = st.Page("portal/4_profile.py", title="Profile", icon="🏢")
+login_page = st.Page("portal/1_login.py", title="Log in", icon="🔑", url_path="login")
+signup_page = st.Page("portal/2_signup.py", title="Sign up", icon="🆕", url_path="signup")
+onboarding_page = st.Page("portal/0_onboarding.py", title="Onboarding", icon="👋", url_path="onboarding")
+admin_page = st.Page("admin_portal/1_profiles.py", title="Admin", icon="🛠️", url_path="admin")
+dashboard_page = st.Page("portal/3_dashboard.py", title="Dashboard", icon="📊", url_path="dashboard")
+profile_page = st.Page("portal/4_profile.py", title="Profile", icon="🏢", url_path="profile")
 
 is_logged_in = st.session_state.token is not None
 onboarding_done = st.session_state.onboarding_completed
 is_admin = is_logged_in and st.session_state.user and st.session_state.user.get("role") == "admin"
 
 if not is_logged_in:
-    # Client abhi tak login nahi — sidebar mein sirf Home + Login/Signup
-    # dikhte hain. Protected pages (Onboarding/Dashboard/Profile/Admin)
-    # bhi yahan ROUTING ke liye zaroor shamil hain — taake koi in mein se
-    # kisi ka direct link kholay to us page ka apna require_login() chal
-    # ke usay Login page par bhej sake (warna Streamlit us page ko route
-    # hi nahi karta, error na dikhaye, chup chap Home par le jata). Wo
-    # extra pages sidebar mein NAHI dikhte — position="hidden" poori
-    # auto-list chhupa deta hai (Home page ke apne buttons se navigate
-    # hota hai, sidebar list ki zaroorat nahi is state mein).
+    # Home + Login/Signup normal sidebar mein dikhte hain. Onboarding/
+    # Dashboard/Profile/Admin bhi ROUTING ke liye isi list mein shamil
+    # hain (taake koi in ka direct link khole to us page ka apna
+    # require_login() chal ke Login par bhej sake) — lekin CSS se unhe
+    # sidebar mein chhupa dete hain, sirf Home/Login/Signup dikhte hain.
+    st.markdown(
+        """
+        <style>
+            a[href$="/onboarding"],
+            a[href$="/dashboard"],
+            a[href$="/profile"],
+            a[href$="/admin"] {
+                display: none !important;
+            }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
     nav_pages = {
         "": [home],
-        "Account": [login_page, signup_page],
-        "Protected": [onboarding_page, dashboard_page, profile_page, admin_page],
+        "Account": [login_page, signup_page, onboarding_page, dashboard_page, profile_page, admin_page],
     }
-    pg = st.navigation(nav_pages, position="hidden")
 elif is_logged_in and not onboarding_done:
     # Login ho gaya lekin onboarding baaki — sirf onboarding show hoga
     nav_pages = {"Setup": [onboarding_page]}
-    pg = st.navigation(nav_pages)
 else:
     # Onboarding complete — sirf dashboard + profile (+ admin agar role admin hai)
     pages = [dashboard_page, profile_page]
     if is_admin:
         pages.append(admin_page)
     nav_pages = {"Workspace": pages}
-    pg = st.navigation(nav_pages)
 
+pg = st.navigation(nav_pages)
 pg.run()
