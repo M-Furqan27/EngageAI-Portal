@@ -10,7 +10,7 @@ if "onboarding_completed" not in st.session_state:
 
 
 # ============================================================
-# HERO — headline + live chat mockup (st.chat_message se, koi custom CSS nahi)
+# HERO — headline + live chat mockup
 # ============================================================
 def hero_section():
     left, right = st.columns([1.05, 0.95], gap="large")
@@ -33,7 +33,6 @@ def hero_section():
     with right:
         with st.container(border=True):
             st.subheader("Platform Overview")
-
             st.success("✔ Organization Created")
             st.success("✔ Representatives Added")
             st.success("✔ Knowledge Base Ready")
@@ -43,7 +42,7 @@ def hero_section():
 
 
 # ============================================================
-# SEQUENCE — "What happens after hours" 4 steps
+# SEQUENCE
 # ============================================================
 def sequence_section():
     st.caption("WHILE YOU SLEEP")
@@ -66,7 +65,7 @@ def sequence_section():
 
 
 # ============================================================
-# FEATURES — 3 cards
+# FEATURES
 # ============================================================
 def features_section():
     st.caption("INSIDE YOUR DASHBOARD")
@@ -117,7 +116,7 @@ def home_page():
 
 
 # ============================================================
-# NAVIGATION (session state ke hisaab se pages control hote hain)
+# NAVIGATION
 # ============================================================
 home = st.Page(home_page, title="Home", icon="🏠", default=True)
 login_page = st.Page("portal/1_login.py", title="Log in", icon="🔑")
@@ -132,13 +131,17 @@ onboarding_done = st.session_state.onboarding_completed
 is_admin = is_logged_in and st.session_state.user and st.session_state.user.get("role") == "admin"
 
 if not is_logged_in:
-    # Client abhi tak login nahi — sirf marketing home + login/signup
+    # Login/Signup navigation dict mein zaroor rahenge (switch_page ke liye zaroori hai),
+    # lekin sidebar list CSS se hide hai — sirf "Home" label cosmetic dikhta hai.
     nav_pages = {"": [home], "Account": [login_page, signup_page]}
+    st.markdown(
+        "<style>[data-testid='stSidebarNav'] {display: none;}</style>",
+        unsafe_allow_html=True,
+    )
+    st.sidebar.markdown("### 🏠 Home")
 elif is_logged_in and not onboarding_done:
-    # Login ho gaya lekin onboarding baaki — sirf onboarding show hoga
     nav_pages = {"Setup": [onboarding_page]}
 else:
-    # Onboarding complete — sirf dashboard + profile (+ admin agar role admin hai)
     pages = [dashboard_page, profile_page]
     if is_admin:
         pages.append(admin_page)
