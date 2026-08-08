@@ -40,10 +40,6 @@ st.markdown(
        Brand
     -------------------------------------------------------- */
 
-    .signup-brand {
-        text-align: center;
-        margin-bottom: 2rem;
-    }
 
     .signup-brand-title {
         font-size: 2rem;
