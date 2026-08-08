@@ -1,16 +1,8 @@
-"""
-EngageAI — Signup Page
-"""
-
 import streamlit as st
 
 from utils import api_client
 from utils.theme import inject_custom_css
 
-
-# ============================================================
-# PAGE CONFIG
-# ============================================================
 
 st.set_page_config(
     page_title="Create Account | EngageAI",
@@ -18,17 +10,8 @@ st.set_page_config(
     layout="centered",
 )
 
-
-# ============================================================
-# GLOBAL THEME
-# ============================================================
-
 inject_custom_css()
 
-
-# ============================================================
-# COUNTRY CODES
-# ============================================================
 
 COUNTRY_CODES = [
     ("+92", "Pakistan"),
@@ -80,12 +63,14 @@ st.write(
     "after your first login."
 )
 
+st.divider()
+
 
 # ============================================================
-# SIGNUP FORM
+# FORM
 # ============================================================
 
-with st.container(border=True):
+with st.form("signup_form"):
 
     st.subheader("🏢 Organization")
 
@@ -106,10 +91,6 @@ with st.container(border=True):
         "These credentials will be used to access your EngageAI portal."
     )
 
-    # --------------------------------------------------------
-    # NAME
-    # --------------------------------------------------------
-
     col1, col2 = st.columns(2)
 
     with col1:
@@ -124,51 +105,28 @@ with st.container(border=True):
             placeholder="Ali",
         )
 
-    # --------------------------------------------------------
-    # EMAIL
-    # --------------------------------------------------------
-
     email = st.text_input(
         "Your login email *",
         placeholder="you@company.com",
     )
 
-    # --------------------------------------------------------
-    # PHONE
-    # --------------------------------------------------------
-
     phone_col1, phone_col2 = st.columns([1.1, 2])
 
     with phone_col1:
-
         code_label = st.selectbox(
             "Country code *",
             CODE_LABELS,
         )
 
     with phone_col2:
-
         phone_number = st.text_input(
             "Phone number *",
             placeholder="300 1234567",
         )
 
-    code = code_label.split(" ")[0]
-
-    phone = (
-        f"{code} {phone_number}".strip()
-        if phone_number
-        else ""
-    )
-
-    # --------------------------------------------------------
-    # PASSWORD
-    # --------------------------------------------------------
-
     password_col1, password_col2 = st.columns(2)
 
     with password_col1:
-
         password = st.text_input(
             "Password *",
             type="password",
@@ -176,7 +134,6 @@ with st.container(border=True):
         )
 
     with password_col2:
-
         confirm_password = st.text_input(
             "Confirm password *",
             type="password",
@@ -184,78 +141,6 @@ with st.container(border=True):
         )
 
     st.write("")
-
-    submitted = st.form_submit_button if False else None
-
-
-# ============================================================
-# FORM
-# ============================================================
-
-with st.form("signup_form"):
-
-    # The actual form fields
-    organization_name = st.text_input(
-        "Organization name *",
-        placeholder="e.g. Sindh Furniture Co.",
-        key="signup_org",
-    )
-
-    col1, col2 = st.columns(2)
-
-    with col1:
-        first_name = st.text_input(
-            "First name *",
-            placeholder="Khalil",
-            key="signup_first_name",
-        )
-
-    with col2:
-        last_name = st.text_input(
-            "Last name *",
-            placeholder="Ali",
-            key="signup_last_name",
-        )
-
-    email = st.text_input(
-        "Your login email *",
-        placeholder="you@company.com",
-        key="signup_email",
-    )
-
-    phone_col1, phone_col2 = st.columns([1.1, 2])
-
-    with phone_col1:
-        code_label = st.selectbox(
-            "Country code *",
-            CODE_LABELS,
-            key="signup_country_code",
-        )
-
-    with phone_col2:
-        phone_number = st.text_input(
-            "Phone number *",
-            placeholder="300 1234567",
-            key="signup_phone",
-        )
-
-    password_col1, password_col2 = st.columns(2)
-
-    with password_col1:
-        password = st.text_input(
-            "Password *",
-            type="password",
-            placeholder="Create a password",
-            key="signup_password",
-        )
-
-    with password_col2:
-        confirm_password = st.text_input(
-            "Confirm password *",
-            type="password",
-            placeholder="Repeat your password",
-            key="signup_confirm_password",
-        )
 
     submitted = st.form_submit_button(
         "Create account →",
@@ -277,10 +162,6 @@ if submitted:
         if phone_number
         else ""
     )
-
-    # --------------------------------------------------------
-    # VALIDATION
-    # --------------------------------------------------------
 
     if not organization_name.strip():
         st.error("Please enter your organization name.")
@@ -325,8 +206,8 @@ if submitted:
             )
 
             st.info(
-                "Your account is ready. "
-                "Please log in to continue your setup."
+                "Your account is ready. Please log in "
+                "to continue your setup."
             )
 
             st.switch_page(
@@ -341,7 +222,7 @@ if submitted:
 
 
 # ============================================================
-# LOGIN
+# LOGIN LINK
 # ============================================================
 
 st.divider()
