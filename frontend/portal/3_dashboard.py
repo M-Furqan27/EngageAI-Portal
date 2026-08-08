@@ -23,22 +23,25 @@ except Exception as e:
 # ---------------- top metric cards ----------------
 c1, c2, c3, c4, c5 = st.columns(5)
 
-c1.metric("Total Leads", summary["total_leads"])
-c2.metric("Active Employees", summary["active_employees"])
-c3.metric("Inactive Employees", summary["inactive_employees"])
-c4.metric("Knowledge Sources", summary["total_knowledge_sources"])
-c5.metric("Representatives", summary["total_representatives"])
-st.caption(f"👥 {summary['active_representatives']} active representative(s) out of {summary['total_representatives']}")
+c1.metric("Total Leads", summary.get("total_leads", 0))
+c2.metric("Active Employees", summary.get("active_employees", 0))
+c3.metric("Inactive Employees", summary.get("inactive_employees", 0))
+c4.metric("Knowledge Sources", summary.get("total_knowledge_sources", 0))
+c5.metric("Representatives", summary.get("total_representatives", 0))
+st.caption(
+    f"👥 {summary.get('active_representatives', 0)} active representative(s) "
+    f"out of {summary.get('total_representatives', 0)}"
+)
 
 st.divider()
 
 # ---------------- lead pipeline ----------------
 st.subheader("Lead Pipeline")
 p1, p2, p3, p4 = st.columns(4)
-p1.metric("🆕 New", summary["new_leads"])
-p2.metric("📞 Contacted", summary["contacted_leads"])
-p3.metric("✅ Qualified", summary["qualified_leads"])
-p4.metric("❌ Lost", summary["lost_leads"])
+p1.metric("🆕 New", summary.get("new_leads", 0))
+p2.metric("📞 Contacted", summary.get("contacted_leads", 0))
+p3.metric("✅ Qualified", summary.get("qualified_leads", 0))
+p4.metric("❌ Lost", summary.get("lost_leads", 0))
 
 st.divider()
 
