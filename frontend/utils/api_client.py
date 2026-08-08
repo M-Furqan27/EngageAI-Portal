@@ -125,7 +125,7 @@ def create_employee(payload: dict):
 def get_dashboard_summary():
 
     res = requests.get(
-        f"{BASE_URL}/summary",
+        f"{BASE_URL}/dashboard/summary",
         headers=_headers()
     )
 
@@ -138,7 +138,7 @@ def get_dashboard_summary():
 def get_leads_over_time(days: int = 30):
 
     res = requests.get(
-        f"{BASE_URL}/leads-over-time",
+        f"{BASE_URL}/dashboard/leads-over-time",
         params={
             "days": days
         },

@@ -13,7 +13,7 @@ with st.sidebar:
         st.session_state.token = None
         st.session_state.user = None
         st.session_state.onboarding_completed = False
-        st.switch_page("app.py")
+        st.rerun()
 
 st.title("📊 Dashboard")
 st.caption(f"Welcome, {st.session_state.user.get('first_name', '')}")

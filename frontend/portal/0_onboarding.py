@@ -916,10 +916,9 @@ if st.button(
             "Setup complete!"
         )
 
-
-        st.switch_page(
-            "portal/3_dashboard.py"
-        )
+        # switch_page nahi — rerun se app.py naya nav_pages banayega
+        # (Workspace: Dashboard, Profile) aur khud dashboard khul jayegi.
+        st.rerun()
 
 
     except Exception as e:

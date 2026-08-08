@@ -35,10 +35,10 @@ if submitted:
             org = api_client.get_organization_profile()
             st.session_state.onboarding_completed = bool(org.get("onboarding_completed"))
 
-            if st.session_state.onboarding_completed:
-                st.switch_page("portal/3_dashboard.py")
-            else:
-                st.switch_page("portal/0_onboarding.py")
+            # switch_page nahi — rerun karte hain taake app.py top se dobara
+            # chale aur naya (logged-in) nav_pages set ban jaye, phir wahi
+            # sahi page (Onboarding ya Dashboard) khud-ba-khud khulti hai.
+            st.rerun()
         except Exception as e:
             st.error(f"Login fail ho gaya — credentials check karein. ({e})")
 

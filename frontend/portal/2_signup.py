@@ -73,8 +73,11 @@ if submitted:
             data = api_client.register_organization_and_owner(payload)
             st.session_state.token = data["token"]
             st.session_state.user = data["user"]
-            st.success(f"'{organization_name}' create ho gayi! Ab login karke apni profile complete karein.")
-            st.switch_page("portal/1_login.py")
+            st.session_state.onboarding_completed = False
+            st.success(f"'{organization_name}' create ho gayi! Ab apni profile complete karein.")
+            # Account already logged in hai (token mil chuka hai) — seedha
+            # onboarding par bhejna hai, dobara login ki zaroorat nahi.
+            st.rerun()
         except Exception as e:
             st.error(f"Signup fail ho gaya. ({e})")
 
