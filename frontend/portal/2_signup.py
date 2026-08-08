@@ -1,14 +1,5 @@
 """
-frontend/portal/2_signup.py
-
-EngageAI — Professional Signup Page
-
-Signup creates:
-- Organization shell
-- Owner account
-
-Remaining organization details are completed
-during the onboarding process after login.
+EngageAI — Signup Page
 """
 
 import streamlit as st
@@ -45,7 +36,7 @@ COUNTRY_CODES = [
     ("+880", "Bangladesh"),
     ("+971", "United Arab Emirates"),
     ("+966", "Saudi Arabia"),
-    ("+1", "United States/Canada"),
+    ("+1", "United States / Canada"),
     ("+44", "United Kingdom"),
     ("+61", "Australia"),
     ("+49", "Germany"),
@@ -74,225 +65,19 @@ CODE_LABELS = [
 
 
 # ============================================================
-# SIGNUP-SPECIFIC STYLING
+# HEADER
 # ============================================================
 
-st.markdown(
-    """
-<style>
+st.markdown("## ✨ EngageAI")
 
-.signup-container {
-    max-width: 680px;
-    margin: 0 auto;
-}
+st.caption("Intelligent business communication")
 
-/* Brand */
+st.title("Create your account")
 
-.signup-brand {
-    text-align: center;
-    padding-top: 1rem;
-    margin-bottom: 1.8rem;
-}
-
-.signup-logo {
-    width: 52px;
-    height: 52px;
-    margin: 0 auto 0.8rem auto;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    border-radius: 15px;
-
-    background: linear-gradient(
-        135deg,
-        #FF4B3E,
-        #E63E33
-    );
-
-    color: white;
-    font-size: 22px;
-    font-weight: 800;
-
-    box-shadow:
-        0 10px 28px rgba(255, 75, 62, 0.25);
-}
-
-.signup-brand-name {
-    color: #F5F7FA;
-    font-size: 1.5rem;
-    font-weight: 800;
-    letter-spacing: -0.04em;
-}
-
-.signup-brand-subtitle {
-    color: #737D8C;
-    font-size: 0.78rem;
-    margin-top: 0.2rem;
-}
-
-
-/* Header */
-
-.signup-header {
-    text-align: center;
-    margin-bottom: 1.6rem;
-}
-
-.signup-title {
-    color: #F5F7FA;
-    font-size: 1.75rem;
-    font-weight: 750;
-    letter-spacing: -0.035em;
-    margin-bottom: 0.35rem;
-}
-
-.signup-description {
-    color: #858E9C;
-    font-size: 0.88rem;
-    line-height: 1.55;
-    max-width: 540px;
-    margin: 0 auto;
-}
-
-
-/* Section */
-
-.signup-section-title {
-    color: #F5F7FA;
-    font-size: 1rem;
-    font-weight: 700;
-    margin-top: 0.25rem;
-    margin-bottom: 0.15rem;
-}
-
-.signup-section-description {
-    color: #737D8C;
-    font-size: 0.78rem;
-    margin-bottom: 0.9rem;
-}
-
-
-/* Form card */
-
-.signup-card {
-    background:
-        linear-gradient(
-            145deg,
-            rgba(22, 29, 39, 0.96),
-            rgba(14, 19, 26, 0.96)
-        );
-
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 18px;
-
-    padding: 1.6rem;
-
-    box-shadow:
-        0 18px 45px rgba(0, 0, 0, 0.22);
-}
-
-
-/* Bottom */
-
-.signup-login-text {
-    text-align: center;
-    color: #737D8C;
-    font-size: 0.82rem;
-    margin-top: 1.4rem;
-}
-
-</style>
-""",
-    unsafe_allow_html=True,
-)
-
-
-# ============================================================
-# PHONE INPUT
-# ============================================================
-
-def phone_input(label_prefix: str, key_prefix: str):
-
-    col1, col2 = st.columns([1.15, 2])
-
-    with col1:
-        code_label = st.selectbox(
-            f"{label_prefix} code *",
-            CODE_LABELS,
-            key=f"{key_prefix}_code",
-        )
-
-    with col2:
-        number = st.text_input(
-            f"{label_prefix} number *",
-            placeholder="300 1234567",
-            key=f"{key_prefix}_number",
-        )
-
-    code = code_label.split(" ")[0]
-
-    combined = (
-        f"{code} {number}".strip()
-        if number
-        else ""
-    )
-
-    return combined, number
-
-
-# ============================================================
-# PAGE HEADER
-# ============================================================
-
-st.markdown(
-    """
-<div class="signup-container">
-
-    <div class="signup-brand">
-
-        <div class="signup-logo">
-            E
-        </div>
-
-        <div class="signup-brand-name">
-            EngageAI
-        </div>
-
-        <div class="signup-brand-subtitle">
-            Intelligent business communication
-        </div>
-
-    </div>
-
-    <div class="signup-header">
-
-        <div class="signup-title">
-            Create your account
-        </div>
-
-        <div class="signup-description">
-            Start your business workspace in a few simple steps.
-            Your remaining organization details can be completed
-            after your first login.
-        </div>
-
-    </div>
-
-</div>
-""",
-    unsafe_allow_html=True,
-)
-
-
-# ============================================================
-# SIGNUP CARD
-# ============================================================
-
-st.markdown(
-    '<div class="signup-card">',
-    unsafe_allow_html=True,
+st.write(
+    "Start your business workspace in a few simple steps. "
+    "You can complete the remaining business details "
+    "after your first login."
 )
 
 
@@ -300,24 +85,12 @@ st.markdown(
 # SIGNUP FORM
 # ============================================================
 
-with st.form("signup_form"):
+with st.container(border=True):
 
-    # --------------------------------------------------------
-    # ORGANIZATION
-    # --------------------------------------------------------
+    st.subheader("🏢 Organization")
 
-    st.markdown(
-        '<div class="signup-section-title">'
-        '🏢 Organization'
-        '</div>',
-        unsafe_allow_html=True,
-    )
-
-    st.markdown(
-        '<div class="signup-section-description">'
-        'Start with the basic identity of your organization.'
-        '</div>',
-        unsafe_allow_html=True,
+    st.caption(
+        "Start with the basic identity of your organization."
     )
 
     organization_name = st.text_input(
@@ -327,23 +100,15 @@ with st.form("signup_form"):
 
     st.divider()
 
-    # --------------------------------------------------------
-    # OWNER ACCOUNT
-    # --------------------------------------------------------
+    st.subheader("👤 Owner account")
 
-    st.markdown(
-        '<div class="signup-section-title">'
-        '👤 Owner account'
-        '</div>',
-        unsafe_allow_html=True,
+    st.caption(
+        "These credentials will be used to access your EngageAI portal."
     )
 
-    st.markdown(
-        '<div class="signup-section-description">'
-        'These credentials will be used to access your EngageAI portal.'
-        '</div>',
-        unsafe_allow_html=True,
-    )
+    # --------------------------------------------------------
+    # NAME
+    # --------------------------------------------------------
 
     col1, col2 = st.columns(2)
 
@@ -359,36 +124,138 @@ with st.form("signup_form"):
             placeholder="Ali",
         )
 
+    # --------------------------------------------------------
+    # EMAIL
+    # --------------------------------------------------------
+
     email = st.text_input(
         "Your login email *",
         placeholder="you@company.com",
     )
 
-    phone, phone_number = phone_input(
-        "Your phone",
-        "owner_phone",
+    # --------------------------------------------------------
+    # PHONE
+    # --------------------------------------------------------
+
+    phone_col1, phone_col2 = st.columns([1.1, 2])
+
+    with phone_col1:
+
+        code_label = st.selectbox(
+            "Country code *",
+            CODE_LABELS,
+        )
+
+    with phone_col2:
+
+        phone_number = st.text_input(
+            "Phone number *",
+            placeholder="300 1234567",
+        )
+
+    code = code_label.split(" ")[0]
+
+    phone = (
+        f"{code} {phone_number}".strip()
+        if phone_number
+        else ""
     )
 
-    col1, col2 = st.columns(2)
+    # --------------------------------------------------------
+    # PASSWORD
+    # --------------------------------------------------------
 
-    with col1:
+    password_col1, password_col2 = st.columns(2)
+
+    with password_col1:
+
         password = st.text_input(
             "Password *",
             type="password",
             placeholder="Create a password",
         )
 
-    with col2:
+    with password_col2:
+
         confirm_password = st.text_input(
             "Confirm password *",
             type="password",
             placeholder="Repeat your password",
         )
 
-    st.markdown(
-        "<div style='height:0.35rem'></div>",
-        unsafe_allow_html=True,
+    st.write("")
+
+    submitted = st.form_submit_button if False else None
+
+
+# ============================================================
+# FORM
+# ============================================================
+
+with st.form("signup_form"):
+
+    # The actual form fields
+    organization_name = st.text_input(
+        "Organization name *",
+        placeholder="e.g. Sindh Furniture Co.",
+        key="signup_org",
     )
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        first_name = st.text_input(
+            "First name *",
+            placeholder="Khalil",
+            key="signup_first_name",
+        )
+
+    with col2:
+        last_name = st.text_input(
+            "Last name *",
+            placeholder="Ali",
+            key="signup_last_name",
+        )
+
+    email = st.text_input(
+        "Your login email *",
+        placeholder="you@company.com",
+        key="signup_email",
+    )
+
+    phone_col1, phone_col2 = st.columns([1.1, 2])
+
+    with phone_col1:
+        code_label = st.selectbox(
+            "Country code *",
+            CODE_LABELS,
+            key="signup_country_code",
+        )
+
+    with phone_col2:
+        phone_number = st.text_input(
+            "Phone number *",
+            placeholder="300 1234567",
+            key="signup_phone",
+        )
+
+    password_col1, password_col2 = st.columns(2)
+
+    with password_col1:
+        password = st.text_input(
+            "Password *",
+            type="password",
+            placeholder="Create a password",
+            key="signup_password",
+        )
+
+    with password_col2:
+        confirm_password = st.text_input(
+            "Confirm password *",
+            type="password",
+            placeholder="Repeat your password",
+            key="signup_confirm_password",
+        )
 
     submitted = st.form_submit_button(
         "Create account →",
@@ -397,59 +264,52 @@ with st.form("signup_form"):
     )
 
 
-# Close card
-st.markdown(
-    "</div>",
-    unsafe_allow_html=True,
-)
-
-
 # ============================================================
 # SIGNUP LOGIC
 # ============================================================
 
 if submitted:
 
-    required = [
-        organization_name,
-        first_name,
-        last_name,
-        email,
-        phone_number,
-        password,
-    ]
+    code = code_label.split(" ")[0]
+
+    phone = (
+        f"{code} {phone_number}".strip()
+        if phone_number
+        else ""
+    )
 
     # --------------------------------------------------------
-    # REQUIRED FIELDS
+    # VALIDATION
     # --------------------------------------------------------
 
-    if not all(required):
+    if not organization_name.strip():
+        st.error("Please enter your organization name.")
 
-        st.error(
-            "Please complete all required (*) fields."
-        )
+    elif not first_name.strip():
+        st.error("Please enter your first name.")
 
-    # --------------------------------------------------------
-    # PASSWORD MATCH
-    # --------------------------------------------------------
+    elif not last_name.strip():
+        st.error("Please enter your last name.")
+
+    elif not email.strip():
+        st.error("Please enter your email.")
+
+    elif not phone_number.strip():
+        st.error("Please enter your phone number.")
+
+    elif not password:
+        st.error("Please create a password.")
 
     elif password != confirm_password:
-
-        st.error(
-            "Passwords do not match."
-        )
-
-    # --------------------------------------------------------
-    # REGISTER
-    # --------------------------------------------------------
+        st.error("Passwords do not match.")
 
     else:
 
         payload = {
-            "organization_name": organization_name,
-            "first_name": first_name,
-            "last_name": last_name,
-            "email": email,
+            "organization_name": organization_name.strip(),
+            "first_name": first_name.strip(),
+            "last_name": last_name.strip(),
+            "email": email.strip(),
             "phone": phone,
             "password": password,
         }
@@ -459,12 +319,6 @@ if submitted:
             api_client.register_organization_and_owner(
                 payload
             )
-
-            # ------------------------------------------------
-            # IMPORTANT:
-            # No auto-login.
-            # User must login manually.
-            # ------------------------------------------------
 
             st.success(
                 f"'{organization_name}' has been created successfully!"
@@ -487,25 +341,19 @@ if submitted:
 
 
 # ============================================================
-# LOGIN LINK
+# LOGIN
 # ============================================================
 
-st.markdown(
-    '<div class="signup-login-text">'
-    'Already have an EngageAI account?'
-    '</div>',
-    unsafe_allow_html=True,
+st.divider()
+
+st.caption(
+    "Already have an EngageAI account?"
 )
 
-
-login_col = st.columns([1, 2, 1])[1]
-
-with login_col:
-
-    if st.button(
-        "← Back to login",
-        use_container_width=True,
-    ):
-        st.switch_page(
-            "portal/1_login.py"
-        )
+if st.button(
+    "← Back to login",
+    use_container_width=True,
+):
+    st.switch_page(
+        "portal/1_login.py"
+    )
