@@ -1,9 +1,9 @@
 import streamlit as st
 import pandas as pd
-import matplotlib.pyplot as plt
+import plotly.graph_objects as go
 from utils import api_client
 from utils.sidebar import render_account_sidebar
-from utils.theme import inject_custom_css, page_header
+from utils.theme import inject_custom_css, page_header, COLORS
 from utils.auth import require_login
 
 inject_custom_css()
@@ -54,13 +54,47 @@ try:
     df = pd.DataFrame(lot["points"])
     df["date"] = pd.to_datetime(df["date"])
 
-    fig, ax = plt.subplots(figsize=(10, 4))
-    ax.plot(df["date"], df["count"], marker="o", color="#6366F1")
-    ax.set_xlabel("Date")
-    ax.set_ylabel("Leads Captured")
-    ax.grid(True, alpha=0.3)
-    fig.autofmt_xdate()
+    with st.container(border=True):
+        fig = go.Figure()
 
-    st.pyplot(fig)
+        fig.add_trace(
+            go.Scatter(
+                x=df["date"],
+                y=df["count"],
+                mode="lines+markers",
+                line=dict(color=COLORS["primary"], width=3, shape="spline"),
+                marker=dict(
+                    size=9,
+                    color=COLORS["accent"],
+                    line=dict(width=2, color=COLORS["bg"]),
+                ),
+                fill="tozeroy",
+                fillcolor="rgba(99, 102, 241, 0.18)",
+                hovertemplate="%{x|%b %d}<br><b>%{y} leads</b><extra></extra>",
+            )
+        )
+
+        fig.update_layout(
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
+            font=dict(color=COLORS["text"], size=13),
+            margin=dict(l=10, r=10, t=10, b=10),
+            height=380,
+            hovermode="x unified",
+            xaxis=dict(
+                title="Date",
+                showgrid=True,
+                gridcolor="rgba(255,255,255,0.06)",
+                zeroline=False,
+            ),
+            yaxis=dict(
+                title="Leads Captured",
+                showgrid=True,
+                gridcolor="rgba(255,255,255,0.06)",
+                zeroline=False,
+            ),
+        )
+
+        st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 except Exception as e:
     st.error(f"Chart load nahi ho saka. ({e})")
