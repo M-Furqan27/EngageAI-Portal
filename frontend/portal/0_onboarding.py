@@ -1,563 +1,246 @@
-
-
 """
 frontend/portal/0_onboarding.py
 
-Onboarding page after first login.
-
-Steps:
-1. Organization
-2. Representatives
-3. Knowledge Base
-
-Finish Setup marks onboarding completed and redirects dashboard.
+Onboarding wizard — 3 steps (Organization → Representatives → Knowledge Base).
+Har step complete hone par, agla step khud-ba-khud khulta hai.
 """
 
+import time
+import re
 import streamlit as st
 from utils import api_client
-import requests
 from utils.theme import inject_custom_css
 from utils.auth import require_login
 
 inject_custom_css()
 
-
-st.set_page_config(
-    page_title="EngageAI Portal",
-    page_icon="👥",
-    layout="wide",
-)
-
-
-
-
-# ---------------- AUTH CHECK ----------------
+st.set_page_config(page_title="EngageAI Portal", page_icon="👥", layout="wide")
 
 require_login()
 
-
-
-# ---------------- CHECK ONBOARDING STATUS ----------------
+EMAIL_PATTERN = re.compile(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
 
 try:
     org = api_client.get_organization_profile()
-
     if org.get("onboarding_completed"):
         st.switch_page("portal/3_dashboard.py")
-
 except Exception as e:
-    st.error(f"Organization data load nahi ho saka. ({e})")
+    st.error(f"We couldn't load your organization details. ({e})")
     st.stop()
 
-
+if "onboarding_step" not in st.session_state:
+    st.session_state.onboarding_step = 1
 
 st.title("👋 Welcome! Let's set up your business.")
-st.caption(
-    "3 steps complete karein, phir aapka dashboard ready ho jayega."
-)
+st.caption(f"Step {st.session_state.onboarding_step} of 3")
+st.progress(st.session_state.onboarding_step / 3)
 
-
-
-BUSINESS_TYPES = [
-    "Retail",
-    "Healthcare",
-    "Education",
-    "Services",
-    "Other"
-]
-
-
+BUSINESS_TYPES = ["Retail", "Healthcare", "Education", "Services", "Other"]
 COUNTRIES = [
-    "Pakistan",
-    "India",
-    "Bangladesh",
-    "United Arab Emirates",
-    "Saudi Arabia",
-    "United States",
-    "United Kingdom",
-    "Canada",
-    "Australia",
-    "Germany",
-    "France",
-    "China",
-    "Japan",
-    "Turkey",
-    "Qatar",
-    "Kuwait",
-    "Oman",
-    "Bahrain",
-    "Malaysia",
-    "Indonesia",
-    "Sri Lanka",
-    "Nepal",
-    "Afghanistan",
-    "Egypt",
-    "South Africa",
-    "Nigeria",
-    "Other",
+    "Pakistan", "India", "Bangladesh", "United Arab Emirates", "Saudi Arabia",
+    "United States", "United Kingdom", "Canada", "Australia", "Germany",
+    "France", "China", "Japan", "Turkey", "Qatar", "Kuwait", "Oman",
+    "Bahrain", "Malaysia", "Indonesia", "Sri Lanka", "Nepal", "Afghanistan",
+    "Egypt", "South Africa", "Nigeria", "Other",
 ]
 
-
-tab1, tab2, tab3 = st.tabs(
-    [
-        "🏢 Organization",
-        "🧑‍💼 Representatives",
-        "📚 Knowledge Base"
-    ]
-)
-
-
-
 # ============================================================
-# TAB 1 ORGANIZATION
+# STEP 1 — ORGANIZATION
 # ============================================================
-
-with tab1:
-
-    st.subheader("Complete your business profile")
-
+if st.session_state.onboarding_step == 1:
+    st.subheader("🏢 Step 1: Complete your business profile")
 
     with st.form("onboarding_org_form"):
-
-        current_business = org.get(
-            "business_type",
-            "Other"
-        )
-
-
+        current_business = org.get("business_type", "Other")
         business_type = st.selectbox(
-            "Business type *",
-            BUSINESS_TYPES,
-            index=(
-                BUSINESS_TYPES.index(current_business)
-                if current_business in BUSINESS_TYPES
-                else 0
-            )
+            "Business type *", BUSINESS_TYPES,
+            index=BUSINESS_TYPES.index(current_business) if current_business in BUSINESS_TYPES else 0,
         )
+        website = st.text_input("Website *", value=org.get("website") or "", placeholder="https://yourbusiness.com")
+        business_email = st.text_input("Business email *", value=org.get("business_email") or "")
+        business_phone = st.text_input("Business phone *", value=org.get("business_phone") or "")
 
-
-        website = st.text_input(
-            "Website *",
-            value=org.get("website") or ""
-        )
-
-
-        business_email = st.text_input(
-            "Business email *",
-            value=org.get("business_email") or ""
-        )
-
-
-        business_phone = st.text_input(
-            "Business phone *",
-            value=org.get("business_phone") or ""
-        )
-
-
-        current_country = org.get(
-            "country",
-            "Pakistan"
-        )
-
-
+        current_country = org.get("country", "Pakistan")
         country = st.selectbox(
-            "Country *",
-            COUNTRIES,
-            index=(
-                COUNTRIES.index(current_country)
-                if current_country in COUNTRIES
-                else 0
-            )
+            "Country *", COUNTRIES,
+            index=COUNTRIES.index(current_country) if current_country in COUNTRIES else 0,
         )
+        address = st.text_area("Address", value=org.get("address") or "")
+        description = st.text_area("Description", value=org.get("description") or "")
 
-
-        address = st.text_area(
-            "Address",
-            value=org.get("address") or ""
-        )
-
-
-        description = st.text_area(
-            "Description",
-            value=org.get("description") or ""
-        )
-
-
-        save_org = st.form_submit_button(
-            "Save Organization →",
-            type="primary"
-        )
-
+        save_org = st.form_submit_button("Save & Continue →", type="primary", use_container_width=True)
 
     if save_org:
+        errors = []
+        if not website.strip():
+            errors.append("Website is required.")
+        if not business_email.strip():
+            errors.append("Business email is required.")
+        elif not EMAIL_PATTERN.match(business_email.strip()):
+            errors.append("Please enter a valid business email address.")
+        if not business_phone.strip():
+            errors.append("Business phone is required.")
 
-        payload = {
-
-            "business_type": business_type,
-            "website": website,
-            "business_email": business_email,
-            "business_phone": business_phone,
-            "country": country,
-            "address": address,
-            "description": description
-
-        }
-
-
-        try:
-
-            api_client.update_organization_profile(
-                payload
-            )
-
-            st.success(
-                "Organization details saved!"
-            )
-
-
-        except Exception as e:
-
-            st.error(
-                f"Save fail ho gaya. ({e})"
-            )
-
-
+        if errors:
+            for err in errors:
+                st.error(err)
+        else:
+            payload = {
+                "business_type": business_type,
+                "website": website.strip(),
+                "business_email": business_email.strip().lower(),
+                "business_phone": business_phone.strip(),
+                "country": country,
+                "address": address.strip(),
+                "description": description.strip(),
+            }
+            try:
+                api_client.update_organization_profile(payload)
+                st.success("✅ Organization details saved. Moving to the next step...")
+                time.sleep(1.2)
+                st.session_state.onboarding_step = 2
+                st.rerun()
+            except Exception as e:
+                st.error(f"We couldn't save your organization details. ({e})")
 
 # ============================================================
-# TAB 2 REPRESENTATIVES
+# STEP 2 — REPRESENTATIVES
 # ============================================================
-with tab2:
+elif st.session_state.onboarding_step == 2:
+    st.subheader("🧑‍💼 Step 2: Add a company representative")
+    st.caption("Add at least one representative who will handle customer meetings. You can add more later from your Profile page.")
 
-    st.title("Representative Management")
-    st.caption("Add and manage company representatives.")
+    with st.form("onboarding_add_rep_form"):
+        representative_name = st.text_input("Representative name *", placeholder="e.g. Ali Khan")
+        service = st.text_input("Service / Department *", placeholder="e.g. Sales")
+        service_description = st.text_area("Service description *", placeholder="Briefly describe what this representative handles...")
+        company_email = st.text_input("Representative's email *", placeholder="representative@company.com")
 
-    with st.form("add_representative_form", clear_on_submit=True):
-        st.subheader("Add Representative")
+        add_rep = st.form_submit_button("Add & Continue →", type="primary", use_container_width=True)
 
-        representative_name = st.text_input("Representative Name", placeholder="Ali")
-        service = st.text_input("Service", placeholder="Vehicle Inspection")
-        service_description = st.text_area("Service Description", placeholder="Describe the service provided...")
-        company_email = st.text_input("Company Email", placeholder="ali@company.com")
+    if add_rep:
+        errors = []
+        if not representative_name.strip():
+            errors.append("Representative name is required.")
+        if not service.strip():
+            errors.append("Service is required.")
+        if not service_description.strip():
+            errors.append("Service description is required.")
+        if not company_email.strip():
+            errors.append("Representative's email is required.")
+        elif not EMAIL_PATTERN.match(company_email.strip()):
+            errors.append("Please enter a valid email address.")
 
-        submitted = st.form_submit_button("Add Representative", use_container_width=True)
-
-        if submitted:
-            if not representative_name.strip():
-                st.error("Representative name is required.")
-            elif not service.strip():
-                st.error("Service is required.")
-            elif not service_description.strip():
-                st.error("Service description is required.")
-            elif not company_email.strip():
-                st.error("Company email is required.")
-            else:
-                payload = {
-                    "representative_name": representative_name.strip(),
-                    "service": service.strip(),
-                    "service_description": service_description.strip(),
-                    "company_email": company_email.strip(),
-                }
-                try:
-                    api_client.create_representative(payload)
-                    st.success("Representative added successfully.")
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"Add failed. ({e})")
+        if errors:
+            for err in errors:
+                st.error(err)
+        else:
+            payload = {
+                "representative_name": representative_name.strip(),
+                "service": service.strip(),
+                "service_description": service_description.strip(),
+                "company_email": company_email.strip().lower(),
+            }
+            try:
+                api_client.create_representative(payload)
+                st.success("✅ Representative added successfully. Moving to the next step...")
+                time.sleep(1.2)
+                st.session_state.onboarding_step = 3
+                st.rerun()
+            except Exception as e:
+                st.error(f"We couldn't add this representative. ({e})")
 
     st.divider()
-    st.subheader("Representatives")
+    if st.button("← Back"):
+        st.session_state.onboarding_step = 1
+        st.rerun()
 
-    try:
-        representatives = api_client.list_representatives()
-    except Exception as e:
-        representatives = []
-        st.error(f"Could not load representatives: {e}")
+# ============================================================
+# STEP 3 — KNOWLEDGE BASE
+# ============================================================
+elif st.session_state.onboarding_step == 3:
+    st.subheader("📚 Step 3: Teach your AI about your business")
 
-    if not representatives:
-        st.info("No representatives added yet.")
-    else:
-        for representative in representatives:
-            representative_id = representative["representative_id"]
-
-            try:
-                calendar_status = api_client.check_calendar_status(representative_id)
-            except Exception:
-                calendar_status = {"connection_status": "Unknown"}
-
-            connection_status = calendar_status.get("connection_status", "Unknown")
-
-            with st.container(border=True):
-                col1, col2, col3, col4, col5, col6, col7 = st.columns([1.2, 1.2, 1.5, 2, 1.2, 1.2, 0.8])
-
-                with col1:
-                    st.write("**Representative**")
-                    st.write(representative.get("representative_name", "Unknown"))
-                with col2:
-                    st.write("**Service**")
-                    st.write(representative.get("service", ""))
-                with col3:
-                    st.write("**Email**")
-                    st.write(representative.get("company_email", ""))
-                with col4:
-                    st.write("**Description**")
-                    st.write(representative.get("service_description", ""))
-                with col5:
-                    st.write("**Invitation**")
-                    invitation = representative.get("invitation_status", "Pending")
-                    if invitation == "Sent":
-                        st.success("Sent")
-                    elif invitation == "Email Failed":
-                        st.error("Failed")
-                    else:
-                        st.warning(invitation)
-                with col6:
-                    st.write("**Calendar**")
-                    if connection_status == "Connected":
-                        st.success("Connected")
-                    elif connection_status == "Revoked":
-                        st.error("Revoked")
-                    else:
-                        st.warning("Not Connected")
-                with col7:
-                    st.write("**Action**")
-                    if st.button("Delete", key=f"delete_{representative_id}", use_container_width=True):
-                        try:
-                            api_client.delete_representative(representative_id)
-                            st.success("Deleted successfully.")
-                            st.rerun()
-                        except Exception as e:
-                            st.error(f"Delete failed. ({e})")
-                            
-with tab3:
-
-
-    st.subheader(
-        "Teach your AI about your business"
-    )
-
-
-    kb_type = st.radio(
-        "Source type",
-        [
-            "Text",
-            "PDF",
-            "URL"
-        ],
-        horizontal=True
-    )
-
-
+    kb_type = st.radio("Source type", ["Text", "PDF", "URL"], horizontal=True)
 
     if kb_type == "Text":
-
-        text_content = st.text_area(
-            "Paste content"
-        )
-
-
-        if st.button(
-            "Upload Text →"
-        ):
-
-            try:
-
-                api_client.upload_knowledge_text(
-                    text_content
-                )
-
-                st.success(
-                    "Text uploaded!"
-                )
-
-                st.rerun()
-
-
-            except Exception as e:
-
-                st.error(
-                    f"Upload fail ({e})"
-                )
-
-
+        text_content = st.text_area("Paste content")
+        if st.button("Upload Text →", type="primary"):
+            if not text_content.strip():
+                st.error("Please enter some text before uploading.")
+            else:
+                try:
+                    api_client.upload_knowledge_text(text_content.strip())
+                    st.success("✅ Text uploaded successfully.")
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Upload failed. ({e})")
 
     elif kb_type == "PDF":
-
-
-        pdf_file = st.file_uploader(
-            "Upload PDF",
-            type=["pdf"]
-        )
-
-
-        if st.button(
-            "Upload PDF →"
-        ):
-
-
-            if pdf_file:
-
+        pdf_file = st.file_uploader("Upload PDF", type=["pdf"])
+        if st.button("Upload PDF →", type="primary"):
+            if not pdf_file:
+                st.error("Please select a PDF file before uploading.")
+            else:
                 try:
-
-                    api_client.upload_knowledge_pdf(
-                        pdf_file
-                    )
-
-
-                    st.success(
-                        "PDF uploaded!"
-                    )
-
+                    api_client.upload_knowledge_pdf(pdf_file)
+                    st.success("✅ PDF uploaded successfully.")
                     st.rerun()
-
-
                 except Exception as e:
-
-                    st.error(
-                        f"Upload fail ({e})"
-                    )
-
-
+                    st.error(f"Upload failed. ({e})")
 
     elif kb_type == "URL":
-
-
-        url = st.text_input(
-            "Website URL"
-        )
-
-
-        if st.button(
-            "Upload URL →"
-        ):
-
-
-            try:
-
-                api_client.upload_knowledge_url(
-                    url
-                )
-
-                st.success(
-                    "URL added!"
-                )
-
-                st.rerun()
-
-
-            except Exception as e:
-
-                st.error(
-                    f"Upload fail ({e})"
-                )
-
-
+        url = st.text_input("Website URL", placeholder="https://yourbusiness.com/faq")
+        if st.button("Upload URL →", type="primary"):
+            if not url.strip():
+                st.error("Please enter a website URL before uploading.")
+            elif not url.strip().startswith(("http://", "https://")):
+                st.error("Please enter a valid URL starting with http:// or https://")
+            else:
+                try:
+                    api_client.upload_knowledge_url(url.strip())
+                    st.success("✅ URL added successfully.")
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Upload failed. ({e})")
 
     st.divider()
 
-
-
     try:
-
         docs = api_client.list_knowledge()
-
-
     except Exception as e:
-
         docs = []
-
-        st.error(
-            f"Knowledge load nahi hui ({e})"
-        )
-
-
+        st.error(f"We couldn't load your knowledge sources. ({e})")
 
     if docs:
-
-
-        st.caption(
-            f"{len(docs)} source(s) added:"
-        )
-
-
+        st.caption(f"{len(docs)} source(s) added:")
         for doc in docs:
-
             with st.container(border=True):
-
-                if isinstance(doc, str):
-                    source_type = "File"
-                    status = "Completed"
-                    source_name = doc
-
-                else:
-                    source_type = doc.get(
-                        "source_type",
-                        doc.get(
-                            "type",
-                            "Unknown"
-                        )
-                    )
-
-                    status = doc.get(
-                        "processing_status",
-                        doc.get(
-                            "status",
-                            "Completed"
-                        )
-                    )
-
-                    source_name = doc.get(
-                        "source_name",
-                        doc.get(
-                            "name",
-                            ""
-                        )
-                    )
-
-                st.markdown(
-                    f"**{source_type}** — {status}"
-                )
-
+                source_type = doc.get("source_type", "Unknown") if isinstance(doc, dict) else "File"
+                status = doc.get("processing_status", "Completed") if isinstance(doc, dict) else "Completed"
+                source_name = doc.get("source_name", doc.get("source_path", "")) if isinstance(doc, dict) else doc
+                st.markdown(f"**{source_type}** — {status}")
                 if source_name:
                     st.caption(source_name)
     else:
+        st.info("No knowledge sources added yet.")
 
-        st.info(
-            "Abhi koi knowledge source add nahi hua."
-        )
-
-
-
-# ============================================================
-# FINISH SETUP
-# ============================================================
-
-
-st.divider()
-
-
-if st.button(
-    "✅ Finish Setup & Go to Dashboard →",
-    type="primary",
-    use_container_width=True
-):
-
-    try:
-
-        api_client.complete_onboarding()
-
-        st.session_state.onboarding_completed = True
-
-        st.success(
-            "Setup complete!"
-        )
-
-        # switch_page nahi — rerun se app.py naya nav_pages banayega
-        # (Workspace: Dashboard, Profile) aur khud dashboard khul jayegi.
+    st.divider()
+    if st.button("← Back"):
+        st.session_state.onboarding_step = 2
         st.rerun()
 
-
-    except Exception as e:
-
-        st.error(
-            f"Fail ho gaya ({e})"
-        )
+# ============================================================
+# FINISH SETUP (Step 3 pe hi available)
+# ============================================================
+if st.session_state.onboarding_step == 3:
+    st.divider()
+    if st.button("✅ Finish Setup & Go to Dashboard →", type="primary", use_container_width=True):
+        try:
+            api_client.complete_onboarding()
+            st.session_state.onboarding_completed = True
+            st.success("✅ Setup complete! Redirecting to your dashboard...")
+            time.sleep(1.2)
+            st.rerun()
+        except Exception as e:
+            st.error(f"We couldn't complete your setup. ({e})")
