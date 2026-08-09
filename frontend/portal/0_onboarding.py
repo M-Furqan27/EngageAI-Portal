@@ -441,11 +441,9 @@ with tab2:
     representatives = fetch_representatives()
 
 
-    if not representatives:
-
-        st.info(
-            "No representatives added yet."
-        )
+    if representatives:
+        for representative in representatives:
+            ...
 
     else:
 
