@@ -219,13 +219,13 @@ else:
         with st.container(border=True):
             top_col1, top_col2, top_col3 = st.columns([3, 2, 2])
             with top_col1:
-                rep_name = representative.get('representative_name', '-')
+                st.markdown(f"### 🧑‍💼 {representative.get('representative_name', '-')}")
                 rep_email = representative.get('company_email', '-')
                 st.markdown(
                     f"<div style='font-size:1.35rem; font-weight:700; margin-bottom:2px;'>🧑‍💼 {rep_name}</div>",
                     unsafe_allow_html=True
                 )
-                st.caption(f"📧 {rep_email}")
+                st.caption(f"📧 {representative.get('company_email', '-')}")
             with top_col2:
                 st.markdown("**Service**")
                 st.markdown(f"<span style='color:#9AA3AE'>{representative.get('service', '-')}</span>", unsafe_allow_html=True)
