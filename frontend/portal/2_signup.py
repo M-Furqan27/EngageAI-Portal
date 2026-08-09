@@ -3,10 +3,10 @@ frontend/portal/2_signup.py
 """
 
 import time
-import re
 import streamlit as st
 from utils import api_client
 from utils.theme import inject_custom_css
+from utils.validators import is_valid_email, is_required, validate_phone, validate_password, validate_min_length
 
 inject_custom_css()
 
@@ -22,8 +22,7 @@ COUNTRY_CODES = [
     ("+20", "Egypt"), ("+27", "South Africa"), ("+234", "Nigeria"),
 ]
 CODE_LABELS = [f"{code}  {name}" for code, name in COUNTRY_CODES]
-
-EMAIL_PATTERN = re.compile(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
+CODE_TO_COUNTRY = {code: name for code, name in COUNTRY_CODES}
 
 
 def phone_input(label_prefix: str, key_prefix: str):
@@ -31,8 +30,9 @@ def phone_input(label_prefix: str, key_prefix: str):
     code_label = c1.selectbox(f"{label_prefix} code *", CODE_LABELS, key=f"{key_prefix}_code")
     number = c2.text_input(f"{label_prefix} number *", key=f"{key_prefix}_number")
     code = code_label.split(" ")[0]
+    country = CODE_TO_COUNTRY.get(code)
     combined = f"{code} {number}".strip() if number else ""
-    return combined, number
+    return combined, number, country
 
 
 st.title("🆕 Create your account")
@@ -57,40 +57,41 @@ with st.form("signup_form"):
     last_name = col2.text_input("Last name *")
     email = st.text_input("Your login email *", placeholder="you@company.com")
 
-    phone, phone_number = phone_input("Your phone", "owner_phone")
+    phone, phone_number, phone_country = phone_input("Your phone", "owner_phone")
 
-    password = st.text_input("Password *", type="password", help="Minimum 8 characters.")
+    password = st.text_input("Password *", type="password", help="Minimum 8 characters, at least one letter and one number.")
     confirm_password = st.text_input("Confirm password *", type="password")
 
     submitted = st.form_submit_button("Create account →", type="primary", use_container_width=True)
+
 if submitted:
     errors = []
 
-    if not organization_name.strip():
+    if not is_required(organization_name):
         errors.append("Organization name is required.")
-    elif len(organization_name.strip()) < 2:
-        errors.append("Organization name must be at least 2 characters.")
+    else:
+        ok, msg = validate_min_length(organization_name, 2, "Organization name")
+        if not ok:
+            errors.append(msg)
 
-    if not first_name.strip():
+    if not is_required(first_name):
         errors.append("First name is required.")
 
-    if not last_name.strip():
+    if not is_required(last_name):
         errors.append("Last name is required.")
 
-    if not email.strip():
+    if not is_required(email):
         errors.append("Email address is required.")
-    elif not EMAIL_PATTERN.match(email.strip()):
-        errors.append("Please enter a valid email address.")
+    elif not is_valid_email(email):
+        errors.append("Please enter a valid email address (e.g. you@company.com).")
 
-    if not phone_number.strip():
-        errors.append("Phone number is required.")
-    elif not phone_number.strip().isdigit():
-        errors.append("Phone number must contain digits only.")
+    phone_ok, phone_msg = validate_phone(phone_number, phone_country)
+    if not phone_ok:
+        errors.append(phone_msg)
 
-    if not password:
-        errors.append("Password is required.")
-    elif len(password) < 8:
-        errors.append("Password must be at least 8 characters long.")
+    pw_ok, pw_msg = validate_password(password, min_len=8)
+    if not pw_ok:
+        errors.append(pw_msg)
 
     if password != confirm_password:
         errors.append("Password and confirmation do not match.")

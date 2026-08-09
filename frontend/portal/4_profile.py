@@ -3,20 +3,25 @@ frontend/portal/4_profile.py
 """
 
 import time
-import re
 import streamlit as st
 from utils import api_client
 from utils.sidebar import render_account_sidebar
 from utils.theme import inject_custom_css, page_header, badge
 from utils.auth import require_login
+from utils.validators import (
+    is_valid_email,
+    is_required,
+    validate_phone,
+    validate_min_length,
+    normalize_website,
+    is_valid_website,
+)
 
 st.set_page_config(page_title="Profile", page_icon="🏢", layout="wide")
 inject_custom_css()
 
 require_login()
 render_account_sidebar()
-
-EMAIL_PATTERN = re.compile(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
 
 if "profile_edit_mode" not in st.session_state:
     st.session_state.profile_edit_mode = False
@@ -118,14 +123,19 @@ else:
 
     if save_org:
         errors = []
-        if not website.strip():
+        if not is_required(website):
             errors.append("Website is required.")
-        if not business_email.strip():
+        elif not is_valid_website(normalize_website(website)):
+            errors.append("Please enter a valid website (e.g. www.yourbusiness.com).")
+
+        if not is_required(business_email):
             errors.append("Business email is required.")
-        elif not EMAIL_PATTERN.match(business_email.strip()):
+        elif not is_valid_email(business_email):
             errors.append("Please enter a valid business email address.")
-        if not business_phone.strip():
-            errors.append("Business phone is required.")
+
+        phone_ok, phone_msg = validate_phone(business_phone, country)
+        if not phone_ok:
+            errors.append(phone_msg)
 
         if errors:
             for err in errors:
@@ -133,7 +143,7 @@ else:
         else:
             payload = {
                 "business_type": business_type,
-                "website": website.strip(),
+                "website": normalize_website(website),
                 "business_email": business_email.strip().lower(),
                 "business_phone": business_phone.strip(),
                 "country": country,
@@ -166,15 +176,26 @@ if st.session_state.profile_edit_mode:
 
         if add_rep:
             errors = []
-            if not rep_name.strip():
+            if not is_required(rep_name):
                 errors.append("Representative name is required.")
-            if not rep_service.strip():
+            else:
+                ok, msg = validate_min_length(rep_name, 2, "Representative name")
+                if not ok:
+                    errors.append(msg)
+
+            if not is_required(rep_service):
                 errors.append("Service is required.")
-            if not rep_desc.strip():
+
+            if not is_required(rep_desc):
                 errors.append("Service description is required.")
-            if not rep_email.strip():
+            else:
+                ok, msg = validate_min_length(rep_desc, 10, "Service description")
+                if not ok:
+                    errors.append(msg)
+
+            if not is_required(rep_email):
                 errors.append("Representative's email is required.")
-            elif not EMAIL_PATTERN.match(rep_email.strip()):
+            elif not is_valid_email(rep_email):
                 errors.append("Please enter a valid email address.")
 
             if errors:
@@ -277,15 +298,19 @@ if st.session_state.profile_edit_mode:
     if source_type == "Text":
         text_content = st.text_area("Paste content")
         if st.button("Upload Text", type="primary"):
-            if not text_content.strip():
+            if not is_required(text_content):
                 st.error("Please enter some text before uploading.")
             else:
-                try:
-                    api_client.upload_knowledge_text(text_content.strip())
-                    st.success("✅ Text uploaded successfully.")
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"Upload failed. ({e})")
+                ok, msg = validate_min_length(text_content, 20, "Text content")
+                if not ok:
+                    st.error(msg)
+                else:
+                    try:
+                        api_client.upload_knowledge_text(text_content.strip())
+                        st.success("✅ Text uploaded successfully.")
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Upload failed. ({e})")
 
     elif source_type == "PDF":
         pdf_file = st.file_uploader("Upload PDF", type=["pdf"])
@@ -303,13 +328,14 @@ if st.session_state.profile_edit_mode:
     elif source_type == "URL":
         url = st.text_input("Website URL")
         if st.button("Upload URL", type="primary"):
-            if not url.strip():
+            normalized_url = normalize_website(url)
+            if not is_required(url):
                 st.error("Please enter a website URL before uploading.")
-            elif not url.strip().startswith(("http://", "https://")):
-                st.error("Please enter a valid URL starting with http:// or https://")
+            elif not is_valid_website(normalized_url):
+                st.error("Please enter a valid URL (e.g. https://yourbusiness.com/faq).")
             else:
                 try:
-                    api_client.upload_knowledge_url(url.strip())
+                    api_client.upload_knowledge_url(normalized_url)
                     st.success("✅ URL added successfully.")
                     st.rerun()
                 except Exception as e:

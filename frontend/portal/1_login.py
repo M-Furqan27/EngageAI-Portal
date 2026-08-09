@@ -6,6 +6,7 @@ import time
 import streamlit as st
 from utils import api_client
 from utils.theme import inject_custom_css
+from utils.validators import is_valid_email, is_required
 
 inject_custom_css()
 
@@ -22,15 +23,19 @@ if _flash:
 st.caption("Log in to access your organization's dashboard.")
 
 with st.form("login_form"):
-    email = st.text_input("Work email", placeholder="you@company.com")
-    password = st.text_input("Password", type="password")
+    email = st.text_input("Work email *", placeholder="you@company.com")
+    password = st.text_input("Password *", type="password")
     submitted = st.form_submit_button("Log in →", type="primary")
 
 if submitted:
     errors = []
-    if not email.strip():
+
+    if not is_required(email):
         errors.append("Please enter your email address.")
-    if not password:
+    elif not is_valid_email(email):
+        errors.append("Please enter a valid email address (e.g. you@company.com).")
+
+    if not is_required(password):
         errors.append("Please enter your password.")
 
     if errors:
@@ -38,7 +43,7 @@ if submitted:
             st.error(err)
     else:
         try:
-            data = api_client.login(email.strip(), password)
+            data = api_client.login(email.strip().lower(), password)
             st.session_state.token = data["token"]
             st.session_state.user = data["user"]
 

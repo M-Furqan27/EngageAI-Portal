@@ -6,19 +6,24 @@ Har step complete hone par, agla step khud-ba-khud khulta hai.
 """
 
 import time
-import re
 import streamlit as st
 from utils import api_client
 from utils.theme import inject_custom_css
 from utils.auth import require_login
+from utils.validators import (
+    is_valid_email,
+    is_required,
+    validate_phone,
+    validate_min_length,
+    normalize_website,
+    is_valid_website,
+)
 
 inject_custom_css()
 
 st.set_page_config(page_title="EngageAI Portal", page_icon="👥", layout="wide")
 
 require_login()
-
-EMAIL_PATTERN = re.compile(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
 
 try:
     org = api_client.get_organization_profile()
@@ -72,14 +77,19 @@ if st.session_state.onboarding_step == 1:
 
     if save_org:
         errors = []
-        if not website.strip():
+        if not is_required(website):
             errors.append("Website is required.")
-        if not business_email.strip():
+        elif not is_valid_website(normalize_website(website)):
+            errors.append("Please enter a valid website (e.g. www.yourbusiness.com).")
+
+        if not is_required(business_email):
             errors.append("Business email is required.")
-        elif not EMAIL_PATTERN.match(business_email.strip()):
+        elif not is_valid_email(business_email):
             errors.append("Please enter a valid business email address.")
-        if not business_phone.strip():
-            errors.append("Business phone is required.")
+
+        phone_ok, phone_msg = validate_phone(business_phone, country)
+        if not phone_ok:
+            errors.append(phone_msg)
 
         if errors:
             for err in errors:
@@ -87,7 +97,7 @@ if st.session_state.onboarding_step == 1:
         else:
             payload = {
                 "business_type": business_type,
-                "website": website.strip(),
+                "website": normalize_website(website),
                 "business_email": business_email.strip().lower(),
                 "business_phone": business_phone.strip(),
                 "country": country,
@@ -120,15 +130,26 @@ elif st.session_state.onboarding_step == 2:
 
     if add_rep:
         errors = []
-        if not representative_name.strip():
+        if not is_required(representative_name):
             errors.append("Representative name is required.")
-        if not service.strip():
+        else:
+            ok, msg = validate_min_length(representative_name, 2, "Representative name")
+            if not ok:
+                errors.append(msg)
+
+        if not is_required(service):
             errors.append("Service is required.")
-        if not service_description.strip():
+
+        if not is_required(service_description):
             errors.append("Service description is required.")
-        if not company_email.strip():
+        else:
+            ok, msg = validate_min_length(service_description, 10, "Service description")
+            if not ok:
+                errors.append(msg)
+
+        if not is_required(company_email):
             errors.append("Representative's email is required.")
-        elif not EMAIL_PATTERN.match(company_email.strip()):
+        elif not is_valid_email(company_email):
             errors.append("Please enter a valid email address.")
 
         if errors:
@@ -166,15 +187,19 @@ elif st.session_state.onboarding_step == 3:
     if kb_type == "Text":
         text_content = st.text_area("Paste content")
         if st.button("Upload Text →", type="primary"):
-            if not text_content.strip():
+            if not is_required(text_content):
                 st.error("Please enter some text before uploading.")
             else:
-                try:
-                    api_client.upload_knowledge_text(text_content.strip())
-                    st.success("✅ Text uploaded successfully.")
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"Upload failed. ({e})")
+                ok, msg = validate_min_length(text_content, 20, "Text content")
+                if not ok:
+                    st.error(msg)
+                else:
+                    try:
+                        api_client.upload_knowledge_text(text_content.strip())
+                        st.success("✅ Text uploaded successfully.")
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Upload failed. ({e})")
 
     elif kb_type == "PDF":
         pdf_file = st.file_uploader("Upload PDF", type=["pdf"])
@@ -192,13 +217,14 @@ elif st.session_state.onboarding_step == 3:
     elif kb_type == "URL":
         url = st.text_input("Website URL", placeholder="https://yourbusiness.com/faq")
         if st.button("Upload URL →", type="primary"):
-            if not url.strip():
+            normalized_url = normalize_website(url)
+            if not is_required(url):
                 st.error("Please enter a website URL before uploading.")
-            elif not url.strip().startswith(("http://", "https://")):
-                st.error("Please enter a valid URL starting with http:// or https://")
+            elif not is_valid_website(normalized_url):
+                st.error("Please enter a valid URL (e.g. https://yourbusiness.com/faq).")
             else:
                 try:
-                    api_client.upload_knowledge_url(url.strip())
+                    api_client.upload_knowledge_url(normalized_url)
                     st.success("✅ URL added successfully.")
                     st.rerun()
                 except Exception as e:
