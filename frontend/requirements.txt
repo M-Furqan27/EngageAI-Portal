@@ -3,4 +3,3 @@ requests
 pandas
 python-dotenv
 matplotlib
-plotly
