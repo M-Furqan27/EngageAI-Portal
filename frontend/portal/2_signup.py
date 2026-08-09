@@ -25,73 +25,18 @@ st.markdown(
     """
     <style>
 
-    /* --------------------------------------------------------
-       Page spacing
-    -------------------------------------------------------- */
-
     .block-container {
         max-width: 980px;
-        padding-top: 3rem;
+        padding-top: 2.5rem;
         padding-bottom: 3rem;
     }
 
-
-    /* --------------------------------------------------------
-       Brand
-    -------------------------------------------------------- */
-
-
-    .signup-brand-title {
-        font-size: 2rem;
-        font-weight: 800;
-        letter-spacing: -0.5px;
-    }
-
-    .signup-brand-subtitle {
-        color: #7f8998;
-        font-size: 0.85rem;
-        margin-top: 0.35rem;
-    }
-
-
-    /* --------------------------------------------------------
-       Main heading
-    -------------------------------------------------------- */
-
-    .signup-heading {
-        text-align: center;
-        margin-bottom: 2rem;
-    }
-
-    .signup-heading h1 {
-        font-size: 2rem;
-        margin-bottom: 0.5rem;
-    }
-
-    .signup-heading p {
-        color: #7f8998;
-        font-size: 0.9rem;
-        max-width: 600px;
-        margin: auto;
-        line-height: 1.6;
-    }
-
-
-    /* --------------------------------------------------------
-       Section containers
-    -------------------------------------------------------- */
-
     div[data-testid="stForm"] {
         border-radius: 16px;
-        border: 1px solid rgba(255,255,255,0.09);
-        background: rgba(18,24,32,0.72);
+        border: 1px solid rgba(255, 255, 255, 0.09);
+        background: rgba(18, 24, 32, 0.72);
         padding: 1.6rem;
     }
-
-
-    /* --------------------------------------------------------
-       Form inputs
-    -------------------------------------------------------- */
 
     div[data-baseweb="input"],
     div[data-baseweb="select"],
@@ -99,27 +44,10 @@ st.markdown(
         border-radius: 9px !important;
     }
 
-
-    /* --------------------------------------------------------
-       Primary button
-    -------------------------------------------------------- */
-
     button[kind="primaryFormSubmit"] {
         min-height: 46px;
         border-radius: 9px !important;
         font-weight: 700;
-    }
-
-
-    /* --------------------------------------------------------
-       Footer
-    -------------------------------------------------------- */
-
-    .signup-footer {
-        text-align: center;
-        color: #737d8c;
-        font-size: 0.82rem;
-        margin-top: 1.5rem;
     }
 
     </style>
@@ -165,6 +93,7 @@ CODE_LABELS = [
     for code, country in COUNTRY_CODES
 ]
 
+
 # ============================================================
 # BRAND
 # ============================================================
@@ -194,7 +123,7 @@ st.divider()
 
 
 # ============================================================
-# FORM
+# SIGNUP FORM
 # ============================================================
 
 with st.form("signup_form"):
@@ -386,10 +315,6 @@ if submitted:
 
     else:
 
-        # ----------------------------------------------------
-        # PAYLOAD
-        # ----------------------------------------------------
-
         payload = {
             "organization_name": organization_name.strip(),
             "first_name": first_name.strip(),
@@ -398,11 +323,6 @@ if submitted:
             "phone": phone,
             "password": password,
         }
-
-
-        # ----------------------------------------------------
-        # API
-        # ----------------------------------------------------
 
         try:
 
@@ -436,16 +356,9 @@ if submitted:
 
 st.divider()
 
-st.markdown(
-    """
-    <div class="signup-footer">
-        Already have an EngageAI account?
-    </div>
-    """,
-    unsafe_allow_html=True,
+st.caption(
+    "Already have an EngageAI account?"
 )
-
-st.write("")
 
 if st.button(
     "← Back to login",
