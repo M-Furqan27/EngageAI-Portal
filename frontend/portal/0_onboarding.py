@@ -866,10 +866,7 @@ with tab3:
                     )
 
     else:
-
-        st.info(
-            "Abhi koi knowledge source add nahi hua."
-        )
+        pass
 
 
 # ============================================================

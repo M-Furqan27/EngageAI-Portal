@@ -120,15 +120,14 @@ router = APIRouter(
 )
 def add_representative(
     payload: RepresentativeCreate,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-
     return create_representative(
         db=db,
+        organization_id=current_user.organization_id,
         payload=payload,
     )
-
-
 
 
 
