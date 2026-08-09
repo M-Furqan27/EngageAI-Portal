@@ -1,11 +1,8 @@
 """
 frontend/portal/1_login.py
-
-REPLACE the existing file. Login ke baad organization profile check karta
-hai — agar onboarding abhi complete nahi hui to wizard dikhata hai,
-warna seedha normal dashboard.
 """
 
+import time
 import streamlit as st
 from utils import api_client
 from utils.theme import inject_custom_css
@@ -18,41 +15,43 @@ if "token" not in st.session_state:
 
 st.title("🔑 Log in")
 
-# Kisi protected page (Profile/Dashboard/Onboarding/Admin) ka direct
-# link kholne par yahan redirect hua ho to alert dikhao
 _flash = st.session_state.pop("flash_message", None)
 if _flash:
     st.warning(f"🔒 {_flash}")
 
-st.caption("Apne organization ke dashboard mein login karein.")
+st.caption("Log in to access your organization's dashboard.")
 
 with st.form("login_form"):
-    email = st.text_input("Work email")
+    email = st.text_input("Work email", placeholder="you@company.com")
     password = st.text_input("Password", type="password")
     submitted = st.form_submit_button("Log in →", type="primary")
 
 if submitted:
-    if not email or not password:
-        st.error("Email aur password dono zaroori hain.")
+    errors = []
+    if not email.strip():
+        errors.append("Please enter your email address.")
+    if not password:
+        errors.append("Please enter your password.")
+
+    if errors:
+        for err in errors:
+            st.error(err)
     else:
         try:
-            data = api_client.login(email, password)
+            data = api_client.login(email.strip(), password)
             st.session_state.token = data["token"]
             st.session_state.user = data["user"]
-            st.success(f"Welcome back, {data['user']['first_name']}!")
 
-            # Onboarding complete hui ya nahi, check karo
             org = api_client.get_organization_profile()
             st.session_state.onboarding_completed = bool(org.get("onboarding_completed"))
 
-            # switch_page nahi — rerun karte hain taake app.py top se dobara
-            # chale aur naya (logged-in) nav_pages set ban jaye, phir wahi
-            # sahi page (Onboarding ya Dashboard) khud-ba-khud khulti hai.
+            st.success(f"✅ Login successful. Welcome back, {data['user']['first_name']}!")
+            time.sleep(1.2)
             st.rerun()
         except Exception as e:
-            st.error(f"Login fail ho gaya — credentials check karein. ({e})")
+            st.error(f"Login failed. Please check your email and password and try again. ({e})")
 
 st.divider()
-st.write("Naye hain?")
+st.write("New here?")
 if st.button("Create an account"):
     st.switch_page("portal/2_signup.py")
