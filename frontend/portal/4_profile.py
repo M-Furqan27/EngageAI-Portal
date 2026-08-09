@@ -2,6 +2,7 @@
 frontend/portal/4_profile.py
 """
 
+import time
 import re
 import streamlit as st
 from utils import api_client
@@ -63,23 +64,37 @@ COUNTRIES = [
 ]
 
 if not st.session_state.profile_edit_mode:
-    col1, col2 = st.columns(2)
-    with col1:
-        st.write("**Business Type**")
-        st.write(org.get("business_type", "-"))
-        st.write("**Website**")
-        st.write(org.get("website", "-"))
-        st.write("**Business Email**")
-        st.write(org.get("business_email", "-"))
-    with col2:
-        st.write("**Business Phone**")
-        st.write(org.get("business_phone", "-"))
-        st.write("**Country**")
-        st.write(org.get("country", "-"))
-        st.write("**Address**")
-        st.write(org.get("address", "-"))
-    st.write("**Description**")
-    st.write(org.get("description", "-"))
+    with st.container(border=True):
+        col1, col2 = st.columns(2)
+
+        with col1:
+            st.markdown("**🏷️ Business Type**")
+            st.markdown(f"<span style='color:#9AA3AE'>{org.get('business_type', '—')}</span>", unsafe_allow_html=True)
+            st.markdown("&nbsp;", unsafe_allow_html=True)
+
+            st.markdown("**🌐 Website**")
+            website_val = org.get('website') or '—'
+            st.markdown(f"<span style='color:#9AA3AE'>{website_val}</span>", unsafe_allow_html=True)
+            st.markdown("&nbsp;", unsafe_allow_html=True)
+
+            st.markdown("**📧 Business Email**")
+            st.markdown(f"<span style='color:#9AA3AE'>{org.get('business_email') or '—'}</span>", unsafe_allow_html=True)
+
+        with col2:
+            st.markdown("**📞 Business Phone**")
+            st.markdown(f"<span style='color:#9AA3AE'>{org.get('business_phone') or '—'}</span>", unsafe_allow_html=True)
+            st.markdown("&nbsp;", unsafe_allow_html=True)
+
+            st.markdown("**🌍 Country**")
+            st.markdown(f"<span style='color:#9AA3AE'>{org.get('country') or '—'}</span>", unsafe_allow_html=True)
+            st.markdown("&nbsp;", unsafe_allow_html=True)
+
+            st.markdown("**📍 Address**")
+            st.markdown(f"<span style='color:#9AA3AE'>{org.get('address') or '—'}</span>", unsafe_allow_html=True)
+
+        st.divider()
+        st.markdown("**📝 Description**")
+        st.markdown(f"<span style='color:#9AA3AE'>{org.get('description') or '—'}</span>", unsafe_allow_html=True)
 
 else:
     with st.form("profile_organization_form"):
