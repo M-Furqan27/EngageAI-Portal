@@ -1,5 +1,3 @@
-
-
 """
 frontend/portal/0_onboarding.py
 
@@ -14,13 +12,15 @@ Finish Setup marks onboarding completed and redirects dashboard.
 """
 
 import streamlit as st
+
 from utils import api_client
-import requests
 from utils.theme import inject_custom_css
 from utils.auth import require_login
 
-inject_custom_css()
 
+# ============================================================
+# PAGE CONFIG
+# ============================================================
 
 st.set_page_config(
     page_title="EngageAI Portal",
@@ -28,16 +28,19 @@ st.set_page_config(
     layout="wide",
 )
 
+inject_custom_css()
 
 
-
-# ---------------- AUTH CHECK ----------------
+# ============================================================
+# AUTH CHECK
+# ============================================================
 
 require_login()
 
 
-
-# ---------------- CHECK ONBOARDING STATUS ----------------
+# ============================================================
+# CHECK ONBOARDING STATUS
+# ============================================================
 
 try:
     org = api_client.get_organization_profile()
@@ -46,24 +49,33 @@ try:
         st.switch_page("portal/3_dashboard.py")
 
 except Exception as e:
-    st.error(f"Organization data load nahi ho saka. ({e})")
+    st.error(
+        f"Organization data load nahi ho saka. ({e})"
+    )
     st.stop()
 
 
+# ============================================================
+# PAGE HEADER
+# ============================================================
 
 st.title("👋 Welcome! Let's set up your business.")
+
 st.caption(
     "3 steps complete karein, phir aapka dashboard ready ho jayega."
 )
 
 
+# ============================================================
+# CONSTANTS
+# ============================================================
 
 BUSINESS_TYPES = [
     "Retail",
     "Healthcare",
     "Education",
     "Services",
-    "Other"
+    "Other",
 ]
 
 
@@ -98,32 +110,33 @@ COUNTRIES = [
 ]
 
 
+# ============================================================
+# TABS
+# ============================================================
+
 tab1, tab2, tab3 = st.tabs(
     [
         "🏢 Organization",
         "🧑‍💼 Representatives",
-        "📚 Knowledge Base"
+        "📚 Knowledge Base",
     ]
 )
 
 
-
 # ============================================================
-# TAB 1 ORGANIZATION
+# TAB 1 — ORGANIZATION
 # ============================================================
 
 with tab1:
 
     st.subheader("Complete your business profile")
 
-
     with st.form("onboarding_org_form"):
 
         current_business = org.get(
             "business_type",
-            "Other"
+            "Other",
         )
-
 
         business_type = st.selectbox(
             "Business type *",
@@ -132,33 +145,28 @@ with tab1:
                 BUSINESS_TYPES.index(current_business)
                 if current_business in BUSINESS_TYPES
                 else 0
-            )
+            ),
         )
-
 
         website = st.text_input(
             "Website *",
-            value=org.get("website") or ""
+            value=org.get("website") or "",
         )
-
 
         business_email = st.text_input(
             "Business email *",
-            value=org.get("business_email") or ""
+            value=org.get("business_email") or "",
         )
-
 
         business_phone = st.text_input(
             "Business phone *",
-            value=org.get("business_phone") or ""
+            value=org.get("business_phone") or "",
         )
-
 
         current_country = org.get(
             "country",
-            "Pakistan"
+            "Pakistan",
         )
-
 
         country = st.selectbox(
             "Country *",
@@ -167,42 +175,35 @@ with tab1:
                 COUNTRIES.index(current_country)
                 if current_country in COUNTRIES
                 else 0
-            )
+            ),
         )
-
 
         address = st.text_area(
             "Address",
-            value=org.get("address") or ""
+            value=org.get("address") or "",
         )
-
 
         description = st.text_area(
             "Description",
-            value=org.get("description") or ""
+            value=org.get("description") or "",
         )
-
 
         save_org = st.form_submit_button(
             "Save Organization →",
-            type="primary"
+            type="primary",
         )
-
 
     if save_org:
 
         payload = {
-
             "business_type": business_type,
             "website": website,
             "business_email": business_email,
             "business_phone": business_phone,
             "country": country,
             "address": address,
-            "description": description
-
+            "description": description,
         }
-
 
         try:
 
@@ -214,6 +215,7 @@ with tab1:
                 "Organization details saved!"
             )
 
+            st.rerun()
 
         except Exception as e:
 
@@ -222,23 +224,11 @@ with tab1:
             )
 
 
-
 # ============================================================
-# TAB 2 REPRESENTATIVES
+# TAB 2 — REPRESENTATIVES
 # ============================================================
 
 with tab2:
-
-    API_BASE_URL = st.secrets.get(
-        "API_BASE_URL",
-        "https://engageai-portal.onrender.com",
-    )
-
-    ORGANIZATION_ID = (
-        "3fa85f64-5717-4562-b3fc-2c963f66afa6"
-    )
-
-    REQUEST_TIMEOUT = 120
 
     st.title("Representative Management")
 
@@ -246,45 +236,18 @@ with tab2:
         "Add and manage company representatives."
     )
 
-    def get_error_message(response):
 
-        try:
-            data = response.json()
-
-            detail = data.get(
-                "detail",
-                data,
-            )
-
-            if isinstance(detail, str):
-                return detail
-
-            return str(detail)
-
-        except ValueError:
-            return (
-                response.text
-                or "Unexpected backend error."
-            )
+    # --------------------------------------------------------
+    # LOAD REPRESENTATIVES
+    # --------------------------------------------------------
 
     def fetch_representatives():
 
         try:
 
-            response = requests.get(
-                f"{API_BASE_URL}/representatives",
-                params={
-                    "organization_id": ORGANIZATION_ID,
-                },
-                timeout=REQUEST_TIMEOUT,
-            )
+            return api_client.list_representatives()
 
-            response.raise_for_status()
-
-            return response.json()
-
-
-        except requests.RequestException as error:
+        except Exception as error:
 
             st.error(
                 f"Could not load representatives: {error}"
@@ -292,29 +255,33 @@ with tab2:
 
             return []
 
+
+    # --------------------------------------------------------
+    # CHECK GOOGLE CALENDAR STATUS
+    # --------------------------------------------------------
+
     def check_calendar_status(
         representative_id: str,
     ):
 
         try:
 
-            response = requests.get(
-                f"{API_BASE_URL}/representatives/{representative_id}/calendar/check",
-                timeout=REQUEST_TIMEOUT,
+            return api_client.check_representative_calendar(
+                representative_id
             )
 
-            response.raise_for_status()
-
-            return response.json()
-
-
-        except requests.RequestException as error:
+        except Exception as error:
 
             return {
                 "calendar_connected": False,
                 "connection_status": "Unknown",
                 "error": str(error),
             }
+
+
+    # --------------------------------------------------------
+    # ADD REPRESENTATIVE
+    # --------------------------------------------------------
 
     def add_representative(
         representative_name,
@@ -324,53 +291,34 @@ with tab2:
     ):
 
         payload = {
-
-            "organization_id":
-                ORGANIZATION_ID,
-
-            "representative_name":
-                representative_name,
-
-            "service":
-                service,
-
-            "service_description":
-                service_description,
-
-            "company_email":
-                company_email,
+            "representative_name": representative_name,
+            "service": service,
+            "service_description": service_description,
+            "company_email": company_email,
         }
-
 
         try:
 
-            response = requests.post(
-                f"{API_BASE_URL}/representatives",
-                json=payload,
-                timeout=REQUEST_TIMEOUT,
+            api_client.create_representative(
+                payload
             )
 
+            return (
+                True,
+                "Representative added successfully.",
+            )
 
-            if response.status_code == 201:
-
-                return (
-                    True,
-                    "Representative added successfully."
-                )
-
+        except Exception as error:
 
             return (
                 False,
-                get_error_message(response)
+                str(error),
             )
 
 
-        except requests.RequestException as error:
-
-            return (
-                False,
-                str(error)
-            )
+    # --------------------------------------------------------
+    # DELETE REPRESENTATIVE
+    # --------------------------------------------------------
 
     def delete_representative(
         representative_id,
@@ -378,23 +326,20 @@ with tab2:
 
         try:
 
-            response = requests.delete(
-                f"{API_BASE_URL}/representatives/{representative_id}",
-                timeout=REQUEST_TIMEOUT,
+            api_client.delete_representative(
+                representative_id
             )
 
+            return True
 
-            if response.status_code == 204:
-
-                return True
-
+        except Exception:
 
             return False
 
 
-        except requests.RequestException:
-
-            return False
+    # --------------------------------------------------------
+    # ADD REPRESENTATIVE FORM
+    # --------------------------------------------------------
 
     with st.form(
         "add_representative_form",
@@ -405,18 +350,15 @@ with tab2:
             "Add Representative"
         )
 
-
         representative_name = st.text_input(
             "Representative Name",
             placeholder="Ali",
         )
 
-
         service = st.text_input(
             "Service",
             placeholder="Vehicle Inspection",
         )
-
 
         service_description = st.text_area(
             "Service Description",
@@ -425,12 +367,10 @@ with tab2:
             ),
         )
 
-
         company_email = st.text_input(
             "Company Email",
             placeholder="ali@company.com",
         )
-
 
         submitted = st.form_submit_button(
             "Add Representative",
@@ -438,8 +378,11 @@ with tab2:
         )
 
 
-        if submitted:
+        # ----------------------------------------------------
+        # FORM VALIDATION
+        # ----------------------------------------------------
 
+        if submitted:
 
             if not representative_name.strip():
 
@@ -447,13 +390,11 @@ with tab2:
                     "Representative name is required."
                 )
 
-
             elif not service.strip():
 
                 st.error(
                     "Service is required."
                 )
-
 
             elif not service_description.strip():
 
@@ -461,13 +402,11 @@ with tab2:
                     "Service description is required."
                 )
 
-
             elif not company_email.strip():
 
                 st.error(
                     "Company email is required."
                 )
-
 
             else:
 
@@ -478,17 +417,20 @@ with tab2:
                     company_email.strip(),
                 )
 
-
                 if success:
 
                     st.success(message)
 
                     st.rerun()
 
-
                 else:
 
                     st.error(message)
+
+
+    # --------------------------------------------------------
+    # REPRESENTATIVES LIST
+    # --------------------------------------------------------
 
     st.divider()
 
@@ -498,31 +440,30 @@ with tab2:
 
     representatives = fetch_representatives()
 
+
     if not representatives:
 
         st.info(
             "No representatives added yet."
         )
 
-
     else:
-
 
         for representative in representatives:
 
-
             representative_id = (
-                representative[
+                representative.get(
                     "representative_id"
-                ]
+                )
             )
 
+            # ------------------------------------------------
+            # GOOGLE CALENDAR STATUS
+            # ------------------------------------------------
 
-            # Check real Google status
             calendar_status = check_calendar_status(
                 representative_id
             )
-
 
             connection_status = (
                 calendar_status.get(
@@ -532,11 +473,21 @@ with tab2:
             )
 
 
+            # ------------------------------------------------
+            # REPRESENTATIVE CARD
+            # ------------------------------------------------
 
             with st.container(border=True):
 
-
-                col1, col2, col3, col4, col5, col6, col7 = st.columns(
+                (
+                    col1,
+                    col2,
+                    col3,
+                    col4,
+                    col5,
+                    col6,
+                    col7,
+                ) = st.columns(
                     [
                         1.2,
                         1.2,
@@ -548,6 +499,10 @@ with tab2:
                     ]
                 )
 
+
+                # --------------------------------------------
+                # REPRESENTATIVE
+                # --------------------------------------------
 
                 with col1:
 
@@ -563,6 +518,10 @@ with tab2:
                     )
 
 
+                # --------------------------------------------
+                # SERVICE
+                # --------------------------------------------
+
                 with col2:
 
                     st.write(
@@ -576,6 +535,10 @@ with tab2:
                         )
                     )
 
+
+                # --------------------------------------------
+                # EMAIL
+                # --------------------------------------------
 
                 with col3:
 
@@ -591,6 +554,10 @@ with tab2:
                     )
 
 
+                # --------------------------------------------
+                # DESCRIPTION
+                # --------------------------------------------
+
                 with col4:
 
                     st.write(
@@ -605,18 +572,20 @@ with tab2:
                     )
 
 
+                # --------------------------------------------
+                # INVITATION
+                # --------------------------------------------
+
                 with col5:
 
                     st.write(
                         "**Invitation**"
                     )
 
-
                     invitation = representative.get(
                         "invitation_status",
                         "Pending",
                     )
-
 
                     if invitation == "Sent":
 
@@ -637,6 +606,9 @@ with tab2:
                         )
 
 
+                # --------------------------------------------
+                # CALENDAR
+                # --------------------------------------------
 
                 with col6:
 
@@ -644,20 +616,17 @@ with tab2:
                         "**Calendar**"
                     )
 
-
                     if connection_status == "Connected":
 
                         st.success(
                             "Connected"
                         )
 
-
                     elif connection_status == "Revoked":
 
                         st.error(
                             "Revoked"
                         )
-
 
                     else:
 
@@ -666,13 +635,15 @@ with tab2:
                         )
 
 
+                # --------------------------------------------
+                # DELETE
+                # --------------------------------------------
 
                 with col7:
 
                     st.write(
                         "**Action**"
                     )
-
 
                     if st.button(
                         "Delete",
@@ -695,32 +666,38 @@ with tab2:
                             st.error(
                                 "Delete failed."
                             )
-with tab3:
 
+
+# ============================================================
+# TAB 3 — KNOWLEDGE BASE
+# ============================================================
+
+with tab3:
 
     st.subheader(
         "Teach your AI about your business"
     )
-
 
     kb_type = st.radio(
         "Source type",
         [
             "Text",
             "PDF",
-            "URL"
+            "URL",
         ],
-        horizontal=True
+        horizontal=True,
     )
 
 
+    # --------------------------------------------------------
+    # TEXT
+    # --------------------------------------------------------
 
     if kb_type == "Text":
 
         text_content = st.text_area(
             "Paste content"
         )
-
 
         if st.button(
             "Upload Text →"
@@ -738,7 +715,6 @@ with tab3:
 
                 st.rerun()
 
-
             except Exception as e:
 
                 st.error(
@@ -746,20 +722,20 @@ with tab3:
                 )
 
 
+    # --------------------------------------------------------
+    # PDF
+    # --------------------------------------------------------
 
     elif kb_type == "PDF":
 
-
         pdf_file = st.file_uploader(
             "Upload PDF",
-            type=["pdf"]
+            type=["pdf"],
         )
-
 
         if st.button(
             "Upload PDF →"
         ):
-
 
             if pdf_file:
 
@@ -769,13 +745,11 @@ with tab3:
                         pdf_file
                     )
 
-
                     st.success(
                         "PDF uploaded!"
                     )
 
                     st.rerun()
-
 
                 except Exception as e:
 
@@ -784,19 +758,19 @@ with tab3:
                     )
 
 
+    # --------------------------------------------------------
+    # URL
+    # --------------------------------------------------------
 
     elif kb_type == "URL":
-
 
         url = st.text_input(
             "Website URL"
         )
 
-
         if st.button(
             "Upload URL →"
         ):
-
 
             try:
 
@@ -810,7 +784,6 @@ with tab3:
 
                 st.rerun()
 
-
             except Exception as e:
 
                 st.error(
@@ -818,15 +791,15 @@ with tab3:
                 )
 
 
+    # --------------------------------------------------------
+    # KNOWLEDGE LIST
+    # --------------------------------------------------------
 
     st.divider()
-
-
 
     try:
 
         docs = api_client.list_knowledge()
-
 
     except Exception as e:
 
@@ -837,55 +810,61 @@ with tab3:
         )
 
 
-
     if docs:
-
 
         st.caption(
             f"{len(docs)} source(s) added:"
         )
-
 
         for doc in docs:
 
             with st.container(border=True):
 
                 if isinstance(doc, str):
+
                     source_type = "File"
+
                     status = "Completed"
+
                     source_name = doc
 
                 else:
+
                     source_type = doc.get(
                         "source_type",
                         doc.get(
                             "type",
-                            "Unknown"
-                        )
+                            "Unknown",
+                        ),
                     )
 
                     status = doc.get(
                         "processing_status",
                         doc.get(
                             "status",
-                            "Completed"
-                        )
+                            "Completed",
+                        ),
                     )
 
                     source_name = doc.get(
                         "source_name",
                         doc.get(
                             "name",
-                            ""
-                        )
+                            "",
+                        ),
                     )
+
 
                 st.markdown(
                     f"**{source_type}** — {status}"
                 )
 
                 if source_name:
-                    st.caption(source_name)
+
+                    st.caption(
+                        source_name
+                    )
+
     else:
 
         st.info(
@@ -893,11 +872,9 @@ with tab3:
         )
 
 
-
 # ============================================================
 # FINISH SETUP
 # ============================================================
-
 
 st.divider()
 
@@ -905,7 +882,7 @@ st.divider()
 if st.button(
     "✅ Finish Setup & Go to Dashboard →",
     type="primary",
-    use_container_width=True
+    use_container_width=True,
 ):
 
     try:
@@ -918,10 +895,10 @@ if st.button(
             "Setup complete!"
         )
 
-        # switch_page nahi — rerun se app.py naya nav_pages banayega
-        # (Workspace: Dashboard, Profile) aur khud dashboard khul jayegi.
-        st.rerun()
+        # Rerun se app.py navigation update hogi
+        # aur dashboard open ho jayega.
 
+        st.rerun()
 
     except Exception as e:
 
