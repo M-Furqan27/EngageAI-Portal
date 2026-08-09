@@ -7,7 +7,7 @@ import re
 import streamlit as st
 from utils import api_client
 from utils.sidebar import render_account_sidebar
-from utils.theme import inject_custom_css
+from utils.theme import inject_custom_css, page_header, badge
 from utils.auth import require_login
 
 st.set_page_config(page_title="Profile", page_icon="🏢", layout="wide")
@@ -32,8 +32,7 @@ except Exception as e:
 # =========================
 header_col, button_col = st.columns([6, 1])
 with header_col:
-    st.title("🏢 Profile")
-    st.caption("Manage your organization setup.")
+    page_header("🏢", "Profile", "Manage your organization setup.")
 with button_col:
     st.write("")  # vertical spacing align karne ke liye
     if not st.session_state.profile_edit_mode:
@@ -234,21 +233,21 @@ else:
                 with badge_col1:
                     st.markdown("**Invitation**")
                     if invitation_status == "Sent":
-                        st.success("✉️ Sent")
+                        badge("Sent", "info", "✉️")
                     elif invitation_status == "Accepted":
-                        st.success("✅ Accepted")
+                        badge("Accepted", "success", "✅")
                     elif invitation_status == "Email Failed":
-                        st.error("⚠️ Failed")
+                        badge("Failed", "danger", "⚠️")
                     else:
-                        st.warning(f"⏳ {invitation_status}")
+                        badge(invitation_status, "warning", "⏳")
                 with badge_col2:
                     st.markdown("**Calendar**")
                     if connection_status == "Connected":
-                        st.success("🟢 Connected")
+                        badge("Connected", "success", "🟢")
                     elif connection_status == "Revoked":
-                        st.error("🔴 Revoked")
+                        badge("Revoked", "danger", "🔴")
                     else:
-                        st.warning("⚪ Not Connected")
+                        badge("Not Connected", "neutral", "⚪")
 
             if representative.get("service_description"):
                 st.markdown("**Description**")

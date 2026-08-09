@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from utils import api_client
 from utils.sidebar import render_account_sidebar
-from utils.theme import inject_custom_css
+from utils.theme import inject_custom_css, page_header
 from utils.auth import require_login
 
 inject_custom_css()
@@ -12,8 +12,7 @@ require_login()
 
 render_account_sidebar()
 
-st.title("📊 Dashboard")
-st.caption(f"Welcome, {st.session_state.user.get('first_name', '')}")
+page_header("📊", "Dashboard", f"Welcome back, {st.session_state.user.get('first_name', '')}")
 
 # ---------------- summary fetch ----------------
 try:
@@ -56,7 +55,7 @@ try:
     df["date"] = pd.to_datetime(df["date"])
 
     fig, ax = plt.subplots(figsize=(10, 4))
-    ax.plot(df["date"], df["count"], marker="o", color="#FF4B4B")
+    ax.plot(df["date"], df["count"], marker="o", color="#6366F1")
     ax.set_xlabel("Date")
     ax.set_ylabel("Leads Captured")
     ax.grid(True, alpha=0.3)
@@ -65,5 +64,3 @@ try:
     st.pyplot(fig)
 except Exception as e:
     st.error(f"Chart load nahi ho saka. ({e})")
-    
- 
