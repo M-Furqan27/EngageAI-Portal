@@ -112,7 +112,6 @@ router = APIRouter(
 # CREATE REPRESENTATIVE
 # =====================================================
 
-
 @router.post(
     "",
     response_model=RepresentativeResponse,
@@ -128,7 +127,6 @@ def add_representative(
         organization_id=current_user.organization_id,
         payload=payload,
     )
-
 
 
 # =====================================================
@@ -564,124 +562,85 @@ def google_callback(
     </html>
 
     """
-
-
-
-
-
-
-
+    
 # =====================================================
 # CALENDAR STATUS CHECK
 # =====================================================
-
 
 @router.get(
     "/{representative_id}/calendar/check",
 )
 def check_calendar_status(
     representative_id: UUID,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-
 
     representative = get_representative(
         db=db,
         representative_id=representative_id,
+        organization_id=current_user.organization_id,
     )
-
-
 
     connection = db.scalar(
-        select(CalendarConnection)
-        .where(
+        select(CalendarConnection).where(
             CalendarConnection.representative_id
-            ==
-            representative_id
+            == representative_id
         )
     )
-
-
 
     if not connection:
 
         return {
-
-            "representative_id":
-                str(representative_id),
-
-            "calendar_connected":
-                False,
-
-            "connection_status":
-                "Not Connected",
+            "representative_id": str(
+                representative_id
+            ),
+            "calendar_connected": False,
+            "connection_status": "Not Connected",
         }
 
-
-
-
-
     try:
-
 
         verify_google_calendar_access(
             connection
         )
 
-
         connection.connection_status = (
             "Connected"
         )
 
-
         representative.calendar_connected = True
-
 
         connection.last_verified_at = (
             datetime.now(timezone.utc)
         )
 
-
-
     except Exception as error:
-
 
         print(
             f"Google calendar revoked: {error}",
             flush=True,
         )
 
-
         connection.connection_status = (
             "Revoked"
         )
 
-
         representative.calendar_connected = False
-
-
 
     db.commit()
 
-
-
     return {
-
-        "representative_id":
-            str(representative_id),
-
-
-        "calendar_connected":
-            representative.calendar_connected,
-
-
-        "connection_status":
-            connection.connection_status,
-
+        "representative_id": str(
+            representative_id
+        ),
+        "calendar_connected": (
+            representative.calendar_connected
+        ),
+        "connection_status": (
+            connection.connection_status
+        ),
     }
-
-
-
 
 
 # =====================================================
@@ -695,12 +654,13 @@ def check_calendar_status(
 )
 def retrieve_representative(
     representative_id: UUID,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-
     return get_representative(
         db=db,
         representative_id=representative_id,
+        organization_id=current_user.organization_id,
     )
 
 
@@ -715,16 +675,17 @@ def retrieve_representative(
 
 @router.delete(
     "/{representative_id}",
-    status_code=204,
+    status_code=status.HTTP_204_NO_CONTENT,
 )
 def remove_representative(
     representative_id: UUID,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-
     delete_representative(
         db=db,
         representative_id=representative_id,
+        organization_id=current_user.organization_id,
     )
 
     return None

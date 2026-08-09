@@ -27,9 +27,7 @@
 
 #     class Config:
 #         from_attributes = True
-
 from datetime import datetime
-
 from uuid import UUID
 
 from pydantic import (
@@ -39,12 +37,11 @@ from pydantic import (
 )
 
 
-
-
+# ============================================================
+# CREATE REPRESENTATIVE
+# ============================================================
 
 class RepresentativeCreate(BaseModel):
-
-    organization_id: UUID
 
     representative_name: str
 
@@ -55,15 +52,15 @@ class RepresentativeCreate(BaseModel):
     company_email: EmailStr
 
 
-
-
+# ============================================================
+# REPRESENTATIVE RESPONSE
+# ============================================================
 
 class RepresentativeResponse(BaseModel):
 
     model_config = ConfigDict(
         from_attributes=True
     )
-
 
     representative_id: UUID
 
@@ -75,20 +72,14 @@ class RepresentativeResponse(BaseModel):
 
     service_description: str
 
-
     company_email: EmailStr
-
 
     invitation_status: str
 
-
     calendar_connected: bool
-
 
     status: str
 
-
     created_at: datetime
-
 
     updated_at: datetime
