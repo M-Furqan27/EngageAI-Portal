@@ -440,12 +440,7 @@ with tab2:
 
     representatives = fetch_representatives()
 
-
     if representatives:
-        for representative in representatives:
-            ...
-
-    else:
 
         for representative in representatives:
 
@@ -469,7 +464,6 @@ with tab2:
                     "Unknown",
                 )
             )
-
 
             # ------------------------------------------------
             # REPRESENTATIVE CARD
@@ -497,16 +491,13 @@ with tab2:
                     ]
                 )
 
-
                 # --------------------------------------------
                 # REPRESENTATIVE
                 # --------------------------------------------
 
                 with col1:
 
-                    st.write(
-                        "**Representative**"
-                    )
+                    st.write("**Representative**")
 
                     st.write(
                         representative.get(
@@ -515,16 +506,13 @@ with tab2:
                         )
                     )
 
-
                 # --------------------------------------------
                 # SERVICE
                 # --------------------------------------------
 
                 with col2:
 
-                    st.write(
-                        "**Service**"
-                    )
+                    st.write("**Service**")
 
                     st.write(
                         representative.get(
@@ -533,16 +521,13 @@ with tab2:
                         )
                     )
 
-
                 # --------------------------------------------
                 # EMAIL
                 # --------------------------------------------
 
                 with col3:
 
-                    st.write(
-                        "**Email**"
-                    )
+                    st.write("**Email**")
 
                     st.write(
                         representative.get(
@@ -551,16 +536,13 @@ with tab2:
                         )
                     )
 
-
                 # --------------------------------------------
                 # DESCRIPTION
                 # --------------------------------------------
 
                 with col4:
 
-                    st.write(
-                        "**Description**"
-                    )
+                    st.write("**Description**")
 
                     st.write(
                         representative.get(
@@ -569,16 +551,13 @@ with tab2:
                         )
                     )
 
-
                 # --------------------------------------------
                 # INVITATION
                 # --------------------------------------------
 
                 with col5:
 
-                    st.write(
-                        "**Invitation**"
-                    )
+                    st.write("**Invitation**")
 
                     invitation = representative.get(
                         "invitation_status",
@@ -587,22 +566,15 @@ with tab2:
 
                     if invitation == "Sent":
 
-                        st.success(
-                            "Sent"
-                        )
+                        st.success("Sent")
 
                     elif invitation == "Email Failed":
 
-                        st.error(
-                            "Failed"
-                        )
+                        st.error("Failed")
 
                     else:
 
-                        st.warning(
-                            invitation
-                        )
-
+                        st.warning(invitation)
 
                 # --------------------------------------------
                 # CALENDAR
@@ -610,28 +582,19 @@ with tab2:
 
                 with col6:
 
-                    st.write(
-                        "**Calendar**"
-                    )
+                    st.write("**Calendar**")
 
                     if connection_status == "Connected":
 
-                        st.success(
-                            "Connected"
-                        )
+                        st.success("Connected")
 
                     elif connection_status == "Revoked":
 
-                        st.error(
-                            "Revoked"
-                        )
+                        st.error("Revoked")
 
                     else:
 
-                        st.warning(
-                            "Not Connected"
-                        )
-
+                        st.warning("Not Connected")
 
                 # --------------------------------------------
                 # DELETE
@@ -639,9 +602,7 @@ with tab2:
 
                 with col7:
 
-                    st.write(
-                        "**Action**"
-                    )
+                    st.write("**Action**")
 
                     if st.button(
                         "Delete",
@@ -664,6 +625,10 @@ with tab2:
                             st.error(
                                 "Delete failed."
                             )
+
+    else:
+        # New account mein kuch bhi show nahi hoga.
+        pass
 
 
 # ============================================================
