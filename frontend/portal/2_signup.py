@@ -2,6 +2,7 @@
 frontend/portal/2_signup.py
 """
 
+import time
 import re
 import streamlit as st
 from utils import api_client
@@ -62,9 +63,7 @@ with st.form("signup_form"):
     confirm_password = st.text_input("Confirm password *", type="password")
 
     submitted = st.form_submit_button("Create account →", type="primary", use_container_width=True)
-
 if submitted:
-    # ---- Field-level validation, professional English messages ----
     errors = []
 
     if not organization_name.strip():
@@ -110,8 +109,9 @@ if submitted:
         }
         try:
             api_client.register_organization_and_owner(payload)
-            st.session_state.signup_success = True
-            st.rerun()
+            st.success("✅ Your account has been created successfully. Redirecting to login...")
+            time.sleep(1.5)
+            st.switch_page("portal/1_login.py")
         except Exception as e:
             st.error(f"We couldn't create your account. Please try again. ({e})")
 
