@@ -161,10 +161,21 @@ def fetch_representatives():
 def check_calendar_status(representative_id):
 
     try:
+        token = st.session_state.get("token")
+
+        if not token:
+            return {
+                "connection_status": "Unknown"
+            }
+
+        headers = {
+            "Authorization": f"Bearer {token}"
+        }
 
         response = requests.get(
             f"{API_BASE_URL}/representatives/"
             f"{representative_id}/calendar/check",
+            headers=headers,
             timeout=REQUEST_TIMEOUT,
         )
 
@@ -173,7 +184,6 @@ def check_calendar_status(representative_id):
         return response.json()
 
     except Exception:
-
         return {
             "connection_status": "Unknown"
         }
