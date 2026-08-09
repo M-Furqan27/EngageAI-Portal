@@ -226,80 +226,107 @@ with tab1:
 # ============================================================
 # TAB 2 REPRESENTATIVES
 # ============================================================
-
 with tab2:
 
     st.title("Representative Management")
     st.caption("Add and manage company representatives.")
 
-    def _headers():
-        token = st.session_state.get("token")
-        return {"Authorization": f"Bearer {token}"} if token else {}
+    with st.form("add_representative_form", clear_on_submit=True):
+        st.subheader("Add Representative")
 
-    def get_error_message(response):
-        try:
-            data = response.json()
-            detail = data.get("detail", data)
-            return detail if isinstance(detail, str) else str(detail)
-        except ValueError:
-            return response.text or "Unexpected backend error."
+        representative_name = st.text_input("Representative Name", placeholder="Ali")
+        service = st.text_input("Service", placeholder="Vehicle Inspection")
+        service_description = st.text_area("Service Description", placeholder="Describe the service provided...")
+        company_email = st.text_input("Company Email", placeholder="ali@company.com")
 
-    def fetch_representatives():
-        try:
-            response = requests.get(
-                f"{api_client.BASE_URL}/representatives",
-                headers=_headers(),
-                timeout=120,
-            )
-            response.raise_for_status()
-            return response.json()
-        except requests.RequestException as error:
-            st.error(f"Could not load representatives: {error}")
-            return []
+        submitted = st.form_submit_button("Add Representative", use_container_width=True)
 
-    def check_calendar_status(representative_id: str):
-        try:
-            response = requests.get(
-                f"{api_client.BASE_URL}/representatives/{representative_id}/calendar/check",
-                headers=_headers(),
-                timeout=120,
-            )
-            response.raise_for_status()
-            return response.json()
-        except requests.RequestException as error:
-            return {"calendar_connected": False, "connection_status": "Unknown", "error": str(error)}
+        if submitted:
+            if not representative_name.strip():
+                st.error("Representative name is required.")
+            elif not service.strip():
+                st.error("Service is required.")
+            elif not service_description.strip():
+                st.error("Service description is required.")
+            elif not company_email.strip():
+                st.error("Company email is required.")
+            else:
+                payload = {
+                    "representative_name": representative_name.strip(),
+                    "service": service.strip(),
+                    "service_description": service_description.strip(),
+                    "company_email": company_email.strip(),
+                }
+                try:
+                    api_client.create_representative(payload)
+                    st.success("Representative added successfully.")
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Add failed. ({e})")
 
-    def add_representative(representative_name, service, service_description, company_email):
-        # organization_id ab bhejne ki zaroorat nahi — backend token se khud le lega
-        payload = {
-            "representative_name": representative_name,
-            "service": service,
-            "service_description": service_description,
-            "company_email": company_email,
-        }
-        try:
-            response = requests.post(
-                f"{api_client.BASE_URL}/representatives",
-                json=payload,
-                headers=_headers(),
-                timeout=120,
-            )
-            if response.status_code == 201:
-                return True, "Representative added successfully."
-            return False, get_error_message(response)
-        except requests.RequestException as error:
-            return False, str(error)
+    st.divider()
+    st.subheader("Representatives")
 
-    def delete_representative(representative_id):
-        try:
-            response = requests.delete(
-                f"{api_client.BASE_URL}/representatives/{representative_id}",
-                headers=_headers(),
-                timeout=120,
-            )
-            return response.status_code == 204
-        except requests.RequestException:
-            return False
+    try:
+        representatives = api_client.list_representatives()
+    except Exception as e:
+        representatives = []
+        st.error(f"Could not load representatives: {e}")
+
+    if not representatives:
+        st.info("No representatives added yet.")
+    else:
+        for representative in representatives:
+            representative_id = representative["representative_id"]
+
+            try:
+                calendar_status = api_client.check_calendar_status(representative_id)
+            except Exception:
+                calendar_status = {"connection_status": "Unknown"}
+
+            connection_status = calendar_status.get("connection_status", "Unknown")
+
+            with st.container(border=True):
+                col1, col2, col3, col4, col5, col6, col7 = st.columns([1.2, 1.2, 1.5, 2, 1.2, 1.2, 0.8])
+
+                with col1:
+                    st.write("**Representative**")
+                    st.write(representative.get("representative_name", "Unknown"))
+                with col2:
+                    st.write("**Service**")
+                    st.write(representative.get("service", ""))
+                with col3:
+                    st.write("**Email**")
+                    st.write(representative.get("company_email", ""))
+                with col4:
+                    st.write("**Description**")
+                    st.write(representative.get("service_description", ""))
+                with col5:
+                    st.write("**Invitation**")
+                    invitation = representative.get("invitation_status", "Pending")
+                    if invitation == "Sent":
+                        st.success("Sent")
+                    elif invitation == "Email Failed":
+                        st.error("Failed")
+                    else:
+                        st.warning(invitation)
+                with col6:
+                    st.write("**Calendar**")
+                    if connection_status == "Connected":
+                        st.success("Connected")
+                    elif connection_status == "Revoked":
+                        st.error("Revoked")
+                    else:
+                        st.warning("Not Connected")
+                with col7:
+                    st.write("**Action**")
+                    if st.button("Delete", key=f"delete_{representative_id}", use_container_width=True):
+                        try:
+                            api_client.delete_representative(representative_id)
+                            st.success("Deleted successfully.")
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"Delete failed. ({e})")
                             
 with tab3:
 

@@ -336,3 +336,12 @@ def delete_knowledge(knowledge_base_id: str):
     res.raise_for_status()
 
     return res.json()
+
+
+def check_calendar_status(representative_id: str):
+    res = requests.get(
+        f"{BASE_URL}/representatives/{representative_id}/calendar/check",
+        headers=_headers()
+    )
+    res.raise_for_status()
+    return res.json()

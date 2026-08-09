@@ -493,349 +493,97 @@ else:
             st.error(
                 f"Save failed ({e})"
             )
-            
+
 # =========================
 # REPRESENTATIVES SECTION
 # =========================
 
-
 st.divider()
+st.subheader("🧑‍💼 Representative Management")
+st.caption("Add and manage company representatives.")
 
-st.subheader(
-    "🧑‍💼 Representative Management"
-)
-
-st.caption(
-    "Add and manage company representatives."
-)
-
-
-
-API_BASE_URL = st.secrets.get(
-    "API_BASE_URL",
-    "https://engageai-portal.onrender.com"
-)
-
-
-REQUEST_TIMEOUT = 120
-
-
-
-def fetch_representatives():
-
-    try:
-
-        response = requests.get(
-            f"{API_BASE_URL}/representatives",
-            timeout=REQUEST_TIMEOUT
-        )
-
-        response.raise_for_status()
-
-        return response.json()
-
-
-    except Exception as e:
-
-        st.error(
-            f"Representatives load nahi ho sake ({e})"
-        )
-
-        return []
-
-
-
-def check_calendar_status(
-    representative_id
-):
-
-    try:
-
-        response = requests.get(
-            f"{API_BASE_URL}/representatives/{representative_id}/calendar/check",
-            timeout=REQUEST_TIMEOUT
-        )
-
-        response.raise_for_status()
-
-        return response.json()
-
-
-    except Exception:
-
-
-        return {
-            "connection_status": "Unknown"
-        }
-
-
-
-representatives = fetch_representatives()
-
-
+try:
+    representatives = api_client.list_representatives()
+except Exception as e:
+    representatives = []
+    st.error(f"Representatives load nahi ho sake ({e})")
 
 if not representatives:
-
-
-    st.info(
-        "No representatives added yet."
-    )
-
-
+    st.info("No representatives added yet.")
 else:
-
-
     for representative in representatives:
-
-
-        representative_id = representative.get(
-            "representative_id"
-        )
-
-
-        calendar_status = check_calendar_status(
-            representative_id
-        )
-
-
-        connection_status = calendar_status.get(
-            "connection_status",
-            "Unknown"
-        )
-
-
-
-        with st.container(
-            border=True
-        ):
-
-
-            col1, col2, col3, col4, col5, col6, col7 = st.columns(
-                [
-                    1.2,
-                    1.2,
-                    1.5,
-                    2,
-                    1.2,
-                    1.2,
-                    0.8
-                ]
-            )
-
-
-            with col1:
-
-                st.write(
-                    "**Representative**"
-                )
-
-                st.write(
-                    representative.get(
-                        "representative_name",
-                        "-"
-                    )
-                )
-
-
-
-            with col2:
-
-                st.write(
-                    "**Service**"
-                )
-
-                st.write(
-                    representative.get(
-                        "service",
-                        "-"
-                    )
-                )
-
-
-
-            with col3:
-
-                st.write(
-                    "**Email**"
-                )
-
-                st.write(
-                    representative.get(
-                        "company_email",
-                        "-"
-                    )
-                )
-
-
-
-            with col4:
-
-                st.write(
-                    "**Description**"
-                )
-
-                st.write(
-                    representative.get(
-                        "service_description",
-                        "-"
-                    )
-                )
-
-
-
-            with col5:
-
-                st.write(
-                    "**Invitation**"
-                )
-
-                st.write(
-                    representative.get(
-                        "invitation_status",
-                        "Pending"
-                    )
-                )
-
-
-
-            with col6:
-
-                st.write(
-                    "**Calendar**"
-                )
-
-
-                if connection_status == "Connected":
-
-                    st.success(
-                        "Connected"
-                    )
-
-                else:
-
-                    st.warning(
-                        "Not Connected"
-                    )
-
-
-
-            with col7:
-
-
-                if st.session_state.profile_edit_mode:
-
-
-                    if st.button(
-                        "Delete",
-                        key=f"profile_delete_{representative_id}"
-                    ):
-
-
-                        api_client.delete_representative(
-                            representative_id
-                        )
-
-
-                        st.success(
-                            "Deleted successfully"
-                        )
-
-
-                        st.rerun()
-
-
-# =========================
-# ADD REPRESENTATIVE
-# EDIT MODE ONLY
-# =========================
-
-
-if st.session_state.profile_edit_mode:
-
-
-    st.divider()
-
-    st.subheader(
-        "Add Representative"
-    )
-
-
-    with st.form(
-        "profile_add_rep_form"
-    ):
-
-
-        representative_name = st.text_input(
-            "Representative Name"
-        )
-
-
-        service = st.text_input(
-            "Service"
-        )
-
-
-        service_description = st.text_area(
-            "Service Description"
-        )
-
-
-        company_email = st.text_input(
-            "Company Email"
-        )
-
-
-        add_rep = st.form_submit_button(
-            "Add Representative"
-        )
-
-
-    if add_rep:
-
-
-        payload = {
-
-    "organization_id": org.get(
-        "organization_id"
-    ),
-
-    "representative_name":
-        representative_name,
-
-    "service":
-        service,
-
-    "service_description":
-        service_description,
-
-    "company_email":
-        company_email
-
-}
-
+        representative_id = representative.get("representative_id")
 
         try:
+            calendar_status = api_client.check_calendar_status(representative_id)
+        except Exception:
+            calendar_status = {"connection_status": "Unknown"}
 
+        connection_status = calendar_status.get("connection_status", "Unknown")
 
-            api_client.create_representative(
-                payload
-            )
+        with st.container(border=True):
+            col1, col2, col3, col4, col5, col6, col7 = st.columns([1.2, 1.2, 1.5, 2, 1.2, 1.2, 0.8])
 
+            with col1:
+                st.write("**Representative**")
+                st.write(representative.get("representative_name", "-"))
+            with col2:
+                st.write("**Service**")
+                st.write(representative.get("service", "-"))
+            with col3:
+                st.write("**Email**")
+                st.write(representative.get("company_email", "-"))
+            with col4:
+                st.write("**Description**")
+                st.write(representative.get("service_description", "-"))
+            with col5:
+                st.write("**Invitation**")
+                st.write(representative.get("invitation_status", "Pending"))
+            with col6:
+                st.write("**Calendar**")
+                if connection_status == "Connected":
+                    st.success("Connected")
+                else:
+                    st.warning("Not Connected")
+            with col7:
+                if st.session_state.profile_edit_mode:
+                    if st.button("Delete", key=f"profile_delete_{representative_id}"):
+                        try:
+                            api_client.delete_representative(representative_id)
+                            st.success("Deleted successfully")
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"Delete failed ({e})")
 
-            st.success(
-                "Representative added!"
-            )
+# =========================
+# ADD REPRESENTATIVE — EDIT MODE ONLY
+# =========================
 
+if st.session_state.profile_edit_mode:
+    st.divider()
+    st.subheader("Add Representative")
 
+    with st.form("profile_add_rep_form"):
+        representative_name = st.text_input("Representative Name")
+        service = st.text_input("Service")
+        service_description = st.text_area("Service Description")
+        company_email = st.text_input("Company Email")
+        add_rep = st.form_submit_button("Add Representative")
+
+    if add_rep:
+        # organization_id ab bhejne ki zaroorat nahi — backend token se le lega
+        payload = {
+            "representative_name": representative_name,
+            "service": service,
+            "service_description": service_description,
+            "company_email": company_email,
+        }
+        try:
+            api_client.create_representative(payload)
+            st.success("Representative added!")
             st.rerun()
-
-
         except Exception as e:
-
-
-            st.error(
-                f"Add failed ({e})"
-            )
+            st.error(f"Add failed ({e})")
             
 # =========================
 # KNOWLEDGE BASE SECTION
