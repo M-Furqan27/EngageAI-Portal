@@ -35,7 +35,8 @@
 
 
 from datetime import datetime, timezone
-
+from modules.auth.service import get_current_user
+from modules.profile.user_model import User
 from uuid import UUID
 
 
@@ -111,20 +112,14 @@ router = APIRouter(
 # =====================================================
 
 
-@router.post(
-    "",
-    response_model=RepresentativeResponse,
-    status_code=status.HTTP_201_CREATED,
-)
+@router.post("", response_model=RepresentativeResponse, status_code=status.HTTP_201_CREATED)
 def add_representative(
     payload: RepresentativeCreate,
+    current_user: User = Depends(get_current_user),   # ADD
     db: Session = Depends(get_db),
 ):
-
-    return create_representative(
-        db=db,
-        payload=payload,
-    )
+    payload.organization_id = current_user.organization_id   # payload ka org_id IGNORE karo, apna token wala use karo
+    return create_representative(db=db, payload=payload)
 
 
 
@@ -135,19 +130,12 @@ def add_representative(
 # =====================================================
 
 
-@router.get(
-    "",
-    response_model=list[RepresentativeResponse],
-)
+@router.get("", response_model=list[RepresentativeResponse])
 def list_representatives(
-    organization_id: UUID | None = None,
+    current_user: User = Depends(get_current_user),   # ADD
     db: Session = Depends(get_db),
 ):
-
-    return get_representatives(
-        db=db,
-        organization_id=organization_id,
-    )
+    return get_representatives(db=db, organization_id=current_user.organization_id)   # query param hataya
 
 
 
@@ -688,20 +676,16 @@ def check_calendar_status(
 # GET ONE
 # =====================================================
 
-
-@router.get(
-    "/{representative_id}",
-    response_model=RepresentativeResponse,
-)
+@router.get("/{representative_id}", response_model=RepresentativeResponse)
 def retrieve_representative(
     representative_id: UUID,
+    current_user: User = Depends(get_current_user),   # ADD
     db: Session = Depends(get_db),
 ):
-
-    return get_representative(
-        db=db,
-        representative_id=representative_id,
-    )
+    rep = get_representative(db=db, representative_id=representative_id)
+    if rep.organization_id != current_user.organization_id:   # ADD
+        raise HTTPException(status_code=403, detail="Not your organization's representative")
+    return rep
 
 
 
@@ -713,18 +697,15 @@ def retrieve_representative(
 # =====================================================
 
 
-@router.delete(
-    "/{representative_id}",
-    status_code=204,
-)
+
+@router.delete("/{representative_id}", status_code=204)
 def remove_representative(
     representative_id: UUID,
+    current_user: User = Depends(get_current_user),   # ADD
     db: Session = Depends(get_db),
 ):
-
-    delete_representative(
-        db=db,
-        representative_id=representative_id,
-    )
-
+    rep = get_representative(db=db, representative_id=representative_id)
+    if rep.organization_id != current_user.organization_id:   # ADD
+        raise HTTPException(status_code=403, detail="Not your organization's representative")
+    delete_representative(db=db, representative_id=representative_id)
     return None

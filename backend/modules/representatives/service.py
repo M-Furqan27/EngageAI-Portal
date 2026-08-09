@@ -45,15 +45,9 @@ from datetime import (
 )
 
 from uuid import UUID
-
-
 from fastapi import HTTPException
-
-
 from sqlalchemy import select
-
 from sqlalchemy.exc import IntegrityError
-
 from sqlalchemy.orm import Session
 
 
@@ -239,48 +233,13 @@ def create_representative(
 
 
 
-
-
-
-
-def get_representatives(
-    db: Session,
-    organization_id: UUID | None = None,
-) -> list[Representative]:
-
-
-    statement = select(
-        Representative
+def get_representatives(db: Session, organization_id: UUID) -> list[Representative]:
+    statement = (
+        select(Representative)
+        .where(Representative.organization_id == organization_id)
+        .order_by(Representative.created_at.desc())
     )
-
-
-    if organization_id:
-
-        statement = statement.where(
-
-            Representative.organization_id
-            ==
-            organization_id
-
-        )
-
-
-    statement = statement.order_by(
-
-        Representative.created_at.desc()
-
-    )
-
-
-    return list(
-
-        db.scalars(
-            statement
-        ).all()
-
-    )
-
-
+    return list(db.scalars(statement).all())
 
 
 
