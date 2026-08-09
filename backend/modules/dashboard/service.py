@@ -5,7 +5,7 @@ from sqlalchemy import func
 from modules.leads.models import Lead
 from modules.knowledge.models import KnowledgeBase
 from modules.profile.user_model import User, UserRole, UserStatus
-
+from modules.representatives.models import Representative   # NEW
 
 
 def get_summary(db: Session, organization_id):
@@ -16,7 +16,6 @@ def get_summary(db: Session, organization_id):
     contacted_leads = leads_query.filter(Lead.status == "Contacted").count()
     qualified_leads = leads_query.filter(Lead.status == "Qualified").count()
     lost_leads = leads_query.filter(Lead.status == "Lost").count()
-
 
     total_knowledge_sources = (
         db.query(KnowledgeBase).filter(KnowledgeBase.organization_id == organization_id).count()
@@ -33,6 +32,11 @@ def get_summary(db: Session, organization_id):
         .count()
     )
 
+    # NEW — representatives count
+    reps_query = db.query(Representative).filter(Representative.organization_id == organization_id)
+    total_representatives = reps_query.count()
+    active_representatives = reps_query.filter(Representative.calendar_connected == True).count()
+
     return {
         "total_leads": total_leads,
         "new_leads": new_leads,
@@ -42,11 +46,12 @@ def get_summary(db: Session, organization_id):
         "total_knowledge_sources": total_knowledge_sources,
         "active_employees": active_employees,
         "inactive_employees": inactive_employees,
+        "total_representatives": total_representatives,     # NEW
+        "active_representatives": active_representatives,   # NEW
     }
 
 
 def get_leads_over_time(db: Session, organization_id, days: int = 30):
-    """Pichle N dinon mein roz kitni leads aayi — chart ke liye."""
     since = datetime.utcnow() - timedelta(days=days)
 
     rows = (
@@ -59,12 +64,9 @@ def get_leads_over_time(db: Session, organization_id, days: int = 30):
 
     data_by_day = {str(row.day): row.count for row in rows}
 
-    # missing dinon ko 0 se fill karo taake chart mein gap na aaye
     points = []
     for i in range(days, -1, -1):
         day = (datetime.utcnow() - timedelta(days=i)).date()
         points.append({"date": str(day), "count": data_by_day.get(str(day), 0)})
 
     return points
-
-
