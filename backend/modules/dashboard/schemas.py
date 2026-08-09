@@ -12,6 +12,8 @@ class DashboardSummary(BaseModel):
     total_knowledge_sources: int
     active_employees: int
     inactive_employees: int
+    total_representatives: int        # NEW
+    active_representatives: int       # NEW
 
 
 class LeadsOverTimePoint(BaseModel):
