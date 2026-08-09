@@ -113,18 +113,42 @@ def display_value(value, fallback="Not provided"):
 
     return value
 
-
 def fetch_representatives():
 
     try:
+        token = st.session_state.get("token")
+
+        if not token:
+            st.error("Authentication token not found.")
+            return []
+
+        headers = {
+            "Authorization": f"Bearer {token}"
+        }
+
         response = requests.get(
             f"{API_BASE_URL}/representatives",
+            headers=headers,
             timeout=REQUEST_TIMEOUT,
         )
 
         response.raise_for_status()
 
         return response.json()
+
+    except requests.HTTPError as e:
+
+        if e.response is not None and e.response.status_code == 401:
+            st.error(
+                "Session expired or unauthorized. "
+                "Please log in again."
+            )
+        else:
+            st.error(
+                f"Representatives load nahi ho sake. ({e})"
+            )
+
+        return []
 
     except Exception as e:
 
@@ -133,7 +157,6 @@ def fetch_representatives():
         )
 
         return []
-
 
 def check_calendar_status(representative_id):
 
