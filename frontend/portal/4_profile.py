@@ -155,6 +155,47 @@ st.divider()
 st.subheader("🧑‍💼 Representative Management")
 st.caption("Add and manage company representatives.")
 
+if st.session_state.profile_edit_mode:
+    with st.expander("➕ Add Representative", expanded=False):
+        with st.form("profile_add_rep_form"):
+            rep_name = st.text_input("Representative name *", placeholder="e.g. Ali Khan")
+            rep_service = st.text_input("Service / Department *", placeholder="e.g. Sales")
+            rep_desc = st.text_area("Service description *", placeholder="Briefly describe what this representative handles...")
+            rep_email = st.text_input("Representative's email *", placeholder="representative@company.com")
+
+            add_rep = st.form_submit_button("Add Representative", type="primary")
+
+        if add_rep:
+            errors = []
+            if not rep_name.strip():
+                errors.append("Representative name is required.")
+            if not rep_service.strip():
+                errors.append("Service is required.")
+            if not rep_desc.strip():
+                errors.append("Service description is required.")
+            if not rep_email.strip():
+                errors.append("Representative's email is required.")
+            elif not EMAIL_PATTERN.match(rep_email.strip()):
+                errors.append("Please enter a valid email address.")
+
+            if errors:
+                for err in errors:
+                    st.error(err)
+            else:
+                payload = {
+                    "representative_name": rep_name.strip(),
+                    "service": rep_service.strip(),
+                    "service_description": rep_desc.strip(),
+                    "company_email": rep_email.strip().lower(),
+                }
+                try:
+                    api_client.create_representative(payload)
+                    st.success("✅ Representative added successfully.")
+                    time.sleep(1.0)
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"We couldn't add this representative. ({e})")
+
 try:
     representatives = api_client.list_representatives()
 except Exception as e:
