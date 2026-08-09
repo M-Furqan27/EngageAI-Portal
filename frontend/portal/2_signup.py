@@ -1,12 +1,8 @@
 """
 frontend/portal/2_signup.py
-
-REPLACE the existing file. Ab do-step wizard nahi — ek hi simple form:
-sirf Organization NAME (poori profile nahi) + Owner account.
-Baaki organization details (business type, website, phone, country, ...)
-pehli baar login karne pe onboarding wizard mein bharni hain.
 """
 
+import re
 import streamlit as st
 from utils import api_client
 from utils.theme import inject_custom_css
@@ -26,6 +22,8 @@ COUNTRY_CODES = [
 ]
 CODE_LABELS = [f"{code}  {name}" for code, name in COUNTRY_CODES]
 
+EMAIL_PATTERN = re.compile(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
+
 
 def phone_input(label_prefix: str, key_prefix: str):
     c1, c2 = st.columns([1.3, 2])
@@ -37,7 +35,15 @@ def phone_input(label_prefix: str, key_prefix: str):
 
 
 st.title("🆕 Create your account")
-st.caption("Bas apna organization ka naam aur apna account bana lo — baaki details pehli login ke baad complete karoge.")
+st.caption("Set up your organization and owner account. You'll complete the rest of your business profile after your first login.")
+
+# Signup successfully hone ke baad yahan rukte hain (redirect turant nahi karte)
+if st.session_state.get("signup_success"):
+    st.success("✅ Your account has been created successfully. Please log in to continue.")
+    if st.button("Continue to Login →", type="primary", use_container_width=True):
+        st.session_state.signup_success = False
+        st.switch_page("portal/1_login.py")
+    st.stop()
 
 with st.form("signup_form"):
     organization_name = st.text_input("Organization name *", placeholder="e.g. Sindh Furniture Co.")
@@ -48,39 +54,66 @@ with st.form("signup_form"):
     col1, col2 = st.columns(2)
     first_name = col1.text_input("First name *")
     last_name = col2.text_input("Last name *")
-    email = st.text_input("Your login email *")
+    email = st.text_input("Your login email *", placeholder="you@company.com")
 
     phone, phone_number = phone_input("Your phone", "owner_phone")
 
-    password = st.text_input("Password *", type="password")
+    password = st.text_input("Password *", type="password", help="Minimum 8 characters.")
     confirm_password = st.text_input("Confirm password *", type="password")
 
     submitted = st.form_submit_button("Create account →", type="primary", use_container_width=True)
 
 if submitted:
-    required = [organization_name, first_name, last_name, email, phone_number, password]
-    if not all(required):
-        st.error("Sab required (*) fields bharna zaroori hai.")
-    elif password != confirm_password:
-        st.error("Password match nahi kar raha.")
+    # ---- Field-level validation, professional English messages ----
+    errors = []
+
+    if not organization_name.strip():
+        errors.append("Organization name is required.")
+    elif len(organization_name.strip()) < 2:
+        errors.append("Organization name must be at least 2 characters.")
+
+    if not first_name.strip():
+        errors.append("First name is required.")
+
+    if not last_name.strip():
+        errors.append("Last name is required.")
+
+    if not email.strip():
+        errors.append("Email address is required.")
+    elif not EMAIL_PATTERN.match(email.strip()):
+        errors.append("Please enter a valid email address.")
+
+    if not phone_number.strip():
+        errors.append("Phone number is required.")
+    elif not phone_number.strip().isdigit():
+        errors.append("Phone number must contain digits only.")
+
+    if not password:
+        errors.append("Password is required.")
+    elif len(password) < 8:
+        errors.append("Password must be at least 8 characters long.")
+
+    if password != confirm_password:
+        errors.append("Password and confirmation do not match.")
+
+    if errors:
+        for err in errors:
+            st.error(err)
     else:
         payload = {
-            "organization_name": organization_name,
-            "first_name": first_name,
-            "last_name": last_name,
-            "email": email,
+            "organization_name": organization_name.strip(),
+            "first_name": first_name.strip(),
+            "last_name": last_name.strip(),
+            "email": email.strip().lower(),
             "phone": phone,
             "password": password,
         }
         try:
-            data = api_client.register_organization_and_owner(payload)
-            # Token ko session mein set NAHI karte — chahte hain client
-            # signup ke baad khud apne credentials se Login page par jaake
-            # login kare (auto-login nahi).
-            st.success(f"'{organization_name}' create ho gayi! Ab login karein.")
-            st.switch_page("portal/1_login.py")
+            api_client.register_organization_and_owner(payload)
+            st.session_state.signup_success = True
+            st.rerun()
         except Exception as e:
-            st.error(f"Signup fail ho gaya. ({e})")
+            st.error(f"We couldn't create your account. Please try again. ({e})")
 
 st.divider()
 if st.button("Already have an account? Log in"):
