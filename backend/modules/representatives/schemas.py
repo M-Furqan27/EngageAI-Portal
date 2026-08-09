@@ -43,17 +43,11 @@ from pydantic import (
 
 
 class RepresentativeCreate(BaseModel):
-
-    organization_id: UUID
-
+    organization_id: UUID | None = None   # optional — router isko current_user se hamesha overwrite karta hai
     representative_name: str
-
     service: str
-
     service_description: str
-
     company_email: EmailStr
-
 
 
 
