@@ -173,80 +173,51 @@ else:
             calendar_status = {"connection_status": "Unknown"}
 
         connection_status = calendar_status.get("connection_status", "Unknown")
+        invitation_status = representative.get("invitation_status", "Pending")
 
         with st.container(border=True):
-            col1, col2, col3, col4, col5, col6, col7 = st.columns([1.2, 1.2, 1.5, 2, 1.2, 1.2, 0.8])
-            with col1:
-                st.write("**Representative**")
-                st.write(representative.get("representative_name", "-"))
-            with col2:
-                st.write("**Service**")
-                st.write(representative.get("service", "-"))
-            with col3:
-                st.write("**Email**")
-                st.write(representative.get("company_email", "-"))
-            with col4:
-                st.write("**Description**")
-                st.write(representative.get("service_description", "-"))
-            with col5:
-                st.write("**Invitation**")
-                st.write(representative.get("invitation_status", "Pending"))
-            with col6:
-                st.write("**Calendar**")
-                if connection_status == "Connected":
-                    st.success("Connected")
-                else:
-                    st.warning("Not Connected")
-            with col7:
-                if st.session_state.profile_edit_mode:
-                    if st.button("Delete", key=f"profile_delete_{representative_id}"):
-                        try:
-                            api_client.delete_representative(representative_id)
-                            st.success(f"✅ '{representative.get('representative_name')}' has been removed successfully.")
-                            st.rerun()
-                        except Exception as e:
-                            st.error(f"We couldn't remove this representative. ({e})")
+            top_col1, top_col2, top_col3 = st.columns([3, 2, 2])
+            with top_col1:
+                st.markdown(f"### 🧑‍💼 {representative.get('representative_name', '-')}")
+                st.caption(f"📧 {representative.get('company_email', '-')}")
+            with top_col2:
+                st.markdown("**Service**")
+                st.markdown(f"<span style='color:#9AA3AE'>{representative.get('service', '-')}</span>", unsafe_allow_html=True)
+            with top_col3:
+                badge_col1, badge_col2 = st.columns(2)
+                with badge_col1:
+                    st.markdown("**Invitation**")
+                    if invitation_status == "Sent":
+                        st.success("✉️ Sent")
+                    elif invitation_status == "Accepted":
+                        st.success("✅ Accepted")
+                    elif invitation_status == "Email Failed":
+                        st.error("⚠️ Failed")
+                    else:
+                        st.warning(f"⏳ {invitation_status}")
+                with badge_col2:
+                    st.markdown("**Calendar**")
+                    if connection_status == "Connected":
+                        st.success("🟢 Connected")
+                    elif connection_status == "Revoked":
+                        st.error("🔴 Revoked")
+                    else:
+                        st.warning("⚪ Not Connected")
 
-if st.session_state.profile_edit_mode:
-    st.divider()
-    st.subheader("Add Representative")
+            if representative.get("service_description"):
+                st.markdown("**Description**")
+                st.markdown(f"<span style='color:#9AA3AE'>{representative.get('service_description')}</span>", unsafe_allow_html=True)
 
-    with st.form("profile_add_rep_form"):
-        representative_name = st.text_input("Representative name *")
-        service = st.text_input("Service *")
-        service_description = st.text_area("Service description *")
-        company_email = st.text_input("Company email *")
-        add_rep = st.form_submit_button("Add Representative", type="primary")
-
-    if add_rep:
-        errors = []
-        if not representative_name.strip():
-            errors.append("Representative name is required.")
-        if not service.strip():
-            errors.append("Service is required.")
-        if not service_description.strip():
-            errors.append("Service description is required.")
-        if not company_email.strip():
-            errors.append("Company email is required.")
-        elif not EMAIL_PATTERN.match(company_email.strip()):
-            errors.append("Please enter a valid email address.")
-
-        if errors:
-            for err in errors:
-                st.error(err)
-        else:
-            payload = {
-                "representative_name": representative_name.strip(),
-                "service": service.strip(),
-                "service_description": service_description.strip(),
-                "company_email": company_email.strip().lower(),
-            }
-            try:
-                api_client.create_representative(payload)
-                st.success(f"✅ '{representative_name}' has been added successfully.")
-                st.rerun()
-            except Exception as e:
-                st.error(f"We couldn't add this representative. ({e})")
+            if st.session_state.profile_edit_mode:
+                st.markdown("&nbsp;", unsafe_allow_html=True)
+                if st.button("🗑️ Delete Representative", key=f"profile_delete_{representative_id}"):
+                    try:
+                        api_client.delete_representative(representative_id)
+                        st.success(f"✅ '{representative.get('representative_name')}' has been removed successfully.")
+                        time.sleep(1.2)
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"We couldn't remove this representative. ({e})")
 
 # =========================
 # KNOWLEDGE BASE SECTION
@@ -310,18 +281,40 @@ except Exception as e:
 
 if documents:
     st.caption(f"{len(documents)} source(s) added")
+
+    icon_map = {"Text": "📝", "PDF": "📄", "URL": "🔗"}
+
     for doc in documents:
+        source_type = doc.get("source_type", "Unknown")
+        status = doc.get("processing_status", "Completed")
+        icon = icon_map.get(source_type, "📚")
+
         with st.container(border=True):
-            col1, col2 = st.columns([5, 1])
+            col1, col2, col3 = st.columns([0.5, 4, 1])
             with col1:
-                st.write(f"**{doc.get('source_type')}** — {doc.get('processing_status')}")
-                st.caption(doc.get("source_path", ""))
+                st.markdown(f"### {icon}")
             with col2:
+                st.markdown(f"**{source_type} Source**")
+                path_preview = doc.get("source_path", "")
+                if len(path_preview) > 100:
+                    path_preview = path_preview[:100] + "..."
+                st.caption(path_preview)
+            with col3:
+                if status == "Completed":
+                    st.success("✅ Completed")
+                elif status == "Failed":
+                    st.error("❌ Failed")
+                elif status == "Processing":
+                    st.warning("⏳ Processing")
+                else:
+                    st.info(status)
+
                 if st.session_state.profile_edit_mode:
                     if st.button("Delete", key=f"delete_kb_{doc.get('knowledge_base_id')}"):
                         try:
                             api_client.delete_knowledge(doc.get("knowledge_base_id"))
                             st.success("✅ Knowledge source deleted successfully.")
+                            time.sleep(1.2)
                             st.rerun()
                         except Exception as e:
                             st.error(f"We couldn't delete this source. ({e})")
