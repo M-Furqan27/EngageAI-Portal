@@ -35,6 +35,8 @@
 
 
 from datetime import datetime, timezone
+from modules.auth.service import get_current_user
+from modules.profile.user_model import User
 
 from uuid import UUID
 
@@ -140,13 +142,12 @@ def add_representative(
     response_model=list[RepresentativeResponse],
 )
 def list_representatives(
-    organization_id: UUID | None = None,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-
     return get_representatives(
         db=db,
-        organization_id=organization_id,
+        organization_id=current_user.organization_id,
     )
 
 
