@@ -40,7 +40,7 @@ def complete_onboarding(db, organization_id):
     db.refresh(org)
 
     requests.post(
-        f"{os.getenv('AGENT_BACKEND_URL')}/agents/create",
+    f"{os.getenv('AGENT_BACKEND_URL')}/pipeline/setup",
         json={
             "organization_id": str(organization_id)
         }
