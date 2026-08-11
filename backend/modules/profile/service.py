@@ -41,10 +41,20 @@ def complete_onboarding(db, organization_id):
 
     requests.post(
     f"{os.getenv('AGENT_BACKEND_URL')}/pipeline/setup",
-        json={
-            "organization_id": str(organization_id)
-        }
-    )
+    json={
+        "organization_id": str(org.organization_id),
+        "organization_name": org.organization_name,
+        "business_type": org.business_type or "",
+        "description": org.description or "",
+        "representative": {
+            "name": "",
+            "email": "",
+            "service": ""
+        },
+        "text": "",
+        "documents": []
+    }
+)
 
     return org
 
