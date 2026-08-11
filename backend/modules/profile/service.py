@@ -3,12 +3,13 @@ backend/modules/profile/service.py
 
 REPLACE the existing file. Ek naya function add hua: complete_onboarding.
 """
-
+import os
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 
 from modules.profile.organization_model import Organization
 from modules.profile.user_model import User
+import requests
 
 
 def get_organization_by_id(db: Session, organization_id):
@@ -28,13 +29,23 @@ def update_organization(db: Session, organization_id, data):
     return org
 
 
-def complete_onboarding(db: Session, organization_id):
-    """Onboarding wizard ke 'Finish Setup' button pe call hota hai — dobara
-    login pe wizard nahi dikhega, seedha dashboard khulega."""
+import os
+
+def complete_onboarding(db, organization_id):
     org = get_organization_by_id(db, organization_id)
+
     org.onboarding_completed = True
+
     db.commit()
     db.refresh(org)
+
+    requests.post(
+        f"{os.getenv('AGENT_BACKEND_URL')}/agents/create",
+        json={
+            "organization_id": str(organization_id)
+        }
+    )
+
     return org
 
 

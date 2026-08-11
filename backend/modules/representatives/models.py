@@ -274,3 +274,4 @@ class CalendarConnection(Base):
     representative: Mapped["Representative"] = relationship(
         back_populates="calendar_connection",
     )
+    

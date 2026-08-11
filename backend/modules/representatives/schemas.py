@@ -86,3 +86,10 @@ class RepresentativeResponse(BaseModel):
 
 
     updated_at: datetime
+    
+class CalendarEventCreate(BaseModel):
+    customer_name: str
+    customer_email: str
+    service: str
+    slot_start: datetime
+    slot_end: datetime

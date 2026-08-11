@@ -34,7 +34,7 @@
 
 
 
-from datetime import datetime, timezone
+from datetime import date, datetime, time, timezone
 from modules.auth.service import get_current_user
 from modules.profile.user_model import User
 from uuid import UUID
@@ -77,6 +77,7 @@ from modules.representatives.models import (
 from modules.representatives.schemas import (
     RepresentativeCreate,
     RepresentativeResponse,
+    CalendarEventCreate,
 )
 
 
@@ -92,8 +93,10 @@ from modules.representatives.google_calendar import (
     create_google_flow,
     get_representative_or_404,
     verify_google_calendar_access,
+    get_calendar_service,
+    get_available_slots,
+    create_calendar_event,
 )
-
 
 
 
@@ -669,7 +672,146 @@ def check_calendar_status(
     }
 
 
+@router.get(
+    "/{representative_id}/calendar/available-slots",
+)
+def available_calendar_slots(
+    representative_id: UUID,
+    proposed_date: date,
+    duration_minutes: int = 30,
+    offset: int = 0,
+    limit: int = 3,
+    db: Session = Depends(get_db),
+):
+    representative = get_representative(
+        db=db,
+        representative_id=representative_id,
+    )
 
+    connection = db.scalar(
+        select(CalendarConnection)
+        .where(
+            CalendarConnection.representative_id
+            == representative_id
+        )
+    )
+
+    if not connection:
+        raise HTTPException(
+            status_code=404,
+            detail="Representative calendar is not connected.",
+        )
+
+    if connection.connection_status != "Connected":
+        raise HTTPException(
+            status_code=400,
+            detail="Representative calendar is not connected.",
+        )
+
+    time_min = datetime.combine(
+        proposed_date,
+        time(9, 0),
+        tzinfo=timezone.utc,
+    )
+
+    time_max = datetime.combine(
+        proposed_date,
+        time(21, 0),
+        tzinfo=timezone.utc,
+    )
+
+    result = get_available_slots(
+        connection=connection,
+        time_min=time_min,
+        time_max=time_max,
+        duration_minutes=duration_minutes,
+        offset=offset,
+        limit=limit,
+    )
+
+    return {
+        "representative_id": str(
+            representative.representative_id
+        ),
+        "calendar_id": connection.google_calendar_id,
+        "proposed_date": proposed_date,
+        "working_hours": {
+            "start": "09:00",
+            "end": "21:00",
+        },
+        "duration_minutes": duration_minutes,
+        "busy_periods": result["busy_periods"],
+        "free_slots": result["free_slots"],
+        "next_offset": result["next_offset"],
+        "has_more": result["has_more"],
+    }
+    
+    
+# =====================================================
+# CREATE CALENDAR EVENT
+# =====================================================
+
+@router.post(
+    "/{representative_id}/calendar/create-event",
+)
+def create_calendar_booking(
+    representative_id: UUID,
+    payload: CalendarEventCreate,
+    db: Session = Depends(get_db),
+):
+
+    representative = get_representative(
+        db=db,
+        representative_id=representative_id,
+    )
+
+
+    connection = db.scalar(
+        select(CalendarConnection)
+        .where(
+            CalendarConnection.representative_id
+            ==
+            representative_id
+        )
+    )
+
+
+    if not connection:
+        raise HTTPException(
+            status_code=404,
+            detail="Representative calendar is not connected.",
+        )
+
+
+    if connection.connection_status != "Connected":
+        raise HTTPException(
+            status_code=400,
+            detail="Representative calendar is not connected.",
+        )
+
+
+    event = create_calendar_event(
+        connection=connection,
+        summary=payload.service,
+        description=(
+            f"Customer Name: {payload.customer_name}\n"
+            f"Customer Email: {payload.customer_email}\n"
+            f"Representative: {representative.representative_name}"
+        ),
+        start_time=payload.slot_start,
+        end_time=payload.slot_end,
+        attendee_email=payload.customer_email,
+    )
+
+
+    return {
+        "status": "confirmed",
+        "message": "Calendar event created successfully",
+        "event_id": event.get("id"),
+        "event_link": event.get("htmlLink"),
+    }
+    
+    
 
 
 # =====================================================
