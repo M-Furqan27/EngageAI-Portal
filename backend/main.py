@@ -72,7 +72,7 @@ from modules.knowledge.router import router as knowledge_router
 from modules.leads.router import router as leads_router
 from modules.representatives.router import router as representatives_router
 from modules.workflows.router import router as workflows_router
-from modules.auth.models import User
+from modules.profile.user_model import User
 from modules.profile.organization_model import Organization
 from modules.representatives.models import Representative, CalendarConnection
 
